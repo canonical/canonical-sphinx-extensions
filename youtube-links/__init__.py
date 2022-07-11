@@ -1,6 +1,10 @@
 from docutils import nodes
 from docutils.parsers.rst import Directive
 from . import common
+import requests
+from bs4 import BeautifulSoup
+
+cache = {}
 
 class YouTubeLink(Directive):
 
@@ -10,11 +14,25 @@ class YouTubeLink(Directive):
 
     def run(self):
 
+        title = ""
+
+        if self.arguments[0] in cache:
+            title = cache[self.arguments[0]]
+        else:
+            try:
+                r = requests.get(self.arguments[0])
+                r.raise_for_status()
+                soup = BeautifulSoup(r.text, 'html.parser')
+                title = soup.title.get_text()
+                cache[self.arguments[0]] = title
+            except requests.HTTPError as err:
+                print(err)
+
         fragment = ' \
         <p class="youtube_link"> \
           <a href="'+self.arguments[0]+'" target="_blank"> \
-            <span class="play_icon">▶</span> \
-            <span>Watch on YouTube</span> \
+            <span title="'+title+'" class="play_icon">▶</span> \
+            <span title="'+title+'">Watch on YouTube</span> \
           </a> \
         </p>'
         raw = nodes.raw(text=fragment, format="html")
