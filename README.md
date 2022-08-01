@@ -139,3 +139,11 @@ For example, in MyST syntax:
 ```{youtube} https://www.youtube.com/watch?v=4iNpiL-lrXU
 ```
 ````
+
+### Custom roles
+
+This extension adds custom roles that can be used in rST.
+
+Currently implemented:
+
+- `spellexception` - Includes the provided text in `<spellexception></spellexception>`, which makes it possible to exclude it from a spell checker.
