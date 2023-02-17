@@ -1,5 +1,6 @@
 from docutils import nodes
 from docutils.parsers.rst import Directive
+from docutils.parsers.rst import directives
 from . import common
 import requests
 from bs4 import BeautifulSoup
@@ -11,12 +12,17 @@ class YouTubeLink(Directive):
     required_arguments = 1
     optional_arguments = 0
     has_content = False
+    option_spec = {
+        'title':directives.unchanged
+        }
 
     def run(self):
 
         title = ""
 
-        if self.arguments[0] in cache:
+        if 'title' in self.options:
+            title = self.options['title']
+        elif self.arguments[0] in cache:
             title = cache[self.arguments[0]]
         else:
             try:

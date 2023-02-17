@@ -140,6 +140,15 @@ For example, in MyST syntax:
 ```
 ````
 
+To override the title, add a `:title:` option.
+For example:
+
+````
+```{youtube} https://www.youtube.com/watch?v=4iNpiL-lrXU
+:title: Watch on YouTube!
+```
+````
+
 ### Custom roles
 
 This extension adds custom roles that can be used in rST.
