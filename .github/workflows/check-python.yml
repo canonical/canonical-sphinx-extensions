@@ -1,0 +1,25 @@
+name: Check Python
+on:
+  - push
+  - pull_request
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Check Python
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install tools
+        run: pip3 install flake8 black
+
+      - name: Run black
+        run: python3 -m black --diff .
+
+      - name: Run flake8
+        run: python3 -m flake8 .

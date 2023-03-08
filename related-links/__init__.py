@@ -21,10 +21,18 @@
 #   the tag "relatedlinks". The link text is extracted automatically
 #   or can be specified in Markdown syntax. Note that spaces are
 #   ignored; if you need spaces in the title, replace them with &#32;.
-#   For example (in MyST syntax):
+#   Some examples (in MyST syntax):
 #
 #   ---
-#   relatedlinks: https://www.example.com, [Link&#32;text](https://www.example.com)
+#   relatedlinks: https://www.example.com
+#   ---
+#
+#   ---
+#   relatedlinks: https://www.example.com, https://www.google.com
+#   ---
+#
+#   ---
+#   relatedlinks: "[Link&#32;text](https://www.example.com)"
 #   ---
 #
 #   If Sphinx complains about the metadata value because it starts
@@ -41,25 +49,25 @@ from . import common
 
 cache = {}
 
-def setup_func(app, pagename, templatename, context, doctree):
 
+def setup_func(app, pagename, templatename, context, doctree):
     def discourse_links(IDlist):
 
         if context["discourse_prefix"] and IDlist:
 
-            posts = IDlist.strip().replace(" ","").split(",")
+            posts = IDlist.strip().replace(" ", "").split(",")
 
-            linklist = "<ul>";
+            linklist = "<ul>"
 
             for post in posts:
                 title = ""
-                linkurl = context["discourse_prefix"]+post
+                linkurl = context["discourse_prefix"] + post
 
                 if post in cache:
                     title = cache[post]
                 else:
                     try:
-                        r = requests.get(linkurl+".json")
+                        r = requests.get(linkurl + ".json")
                         r.raise_for_status()
                         title = json.loads(r.text)["title"]
                         cache[post] = title
@@ -67,7 +75,8 @@ def setup_func(app, pagename, templatename, context, doctree):
                         print(err)
 
                 if title:
-                    linklist += '<li><a href="'+linkurl+'" target="_blank">'+title+'</a></li>'
+                    linklist += '<li><a href="' + linkurl
+                    linklist += '" target="_blank">' + title + "</a></li>"
 
             linklist += "</ul>"
 
@@ -80,9 +89,9 @@ def setup_func(app, pagename, templatename, context, doctree):
 
         if linklist:
 
-            links = linklist.strip().replace(" ","").split(",")
+            links = linklist.strip().replace(" ", "").split(",")
 
-            linklist = "<ul>";
+            linklist = "<ul>"
 
             for link in links:
                 title = ""
@@ -97,14 +106,15 @@ def setup_func(app, pagename, templatename, context, doctree):
                     try:
                         r = requests.get(link)
                         r.raise_for_status()
-                        soup = BeautifulSoup(r.text, 'html.parser')
+                        soup = BeautifulSoup(r.text, "html.parser")
                         title = soup.title.get_text()
                         cache[link] = title
                     except requests.HTTPError as err:
                         print(err)
 
                 if title:
-                    linklist += '<li><a href="'+link+'" target="_blank">'+title+'</a></li>'
+                    linklist += '<li><a href="' + link + '" target="_blank">'
+                    linklist += title + "</a></li>"
 
             linklist += "</ul>"
 
@@ -113,16 +123,14 @@ def setup_func(app, pagename, templatename, context, doctree):
         else:
             return ""
 
-    context['discourse_links'] = discourse_links
-    context['related_links'] = related_links
+    context["discourse_links"] = discourse_links
+    context["related_links"] = related_links
+
 
 def setup(app):
     app.connect("html-page-context", setup_func)
 
-    common.add_css(app,"related-links.css")
+    common.add_css(app, "related-links.css")
 
-    return {
-        'version': '0.1',
-        'parallel_read_safe': True,
-        'parallel_write_safe': True,
-    }
+    return {"version": "0.1", "parallel_read_safe": True,
+            "parallel_write_safe": True}
