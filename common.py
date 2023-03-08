@@ -16,3 +16,11 @@ def add_css(app, filename):
         exc: copy_custom_files(app, exc, filename)
     )
     app.add_css_file(filename)
+
+
+def add_js(app, filename):
+    app.connect(
+        "build-finished", lambda app,
+        exc: copy_custom_files(app, exc, filename)
+    )
+    app.add_js_file(filename)

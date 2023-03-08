@@ -1,0 +1,41 @@
+.hide-details {
+    display: none;
+}
+
+.configoption .basicinfo::after {
+    content: "▼";
+    color: var(--color-table-border);
+    padding-right: 10px;
+}
+
+.configoption .basicinfo {
+    display: grid;
+    grid-template-columns: 2fr 4fr 1fr 10px ;
+}
+
+.configoption .shortdesc p {
+    margin: 0;
+}
+
+.configoption .basicinfo .key {
+    margin-right: 5px;
+}
+
+.configoption .details .fields {
+    list-style: none;
+    padding-left: 0;
+    font-size: smaller;
+}
+
+.ignoreP p {
+    display: inline;
+}
+
+.configoption {
+    border-bottom: 1px solid var(--color-table-border);
+    padding: 10px 0px;
+}
+
+.configoption + p {
+    margin-top: 20px;
+}
