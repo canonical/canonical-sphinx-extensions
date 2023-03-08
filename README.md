@@ -222,3 +222,45 @@ For example, in MyST syntax:
 ```
 {ref}`config-options`
 ```
+
+### Terminal output
+
+This extension adds a `:terminal:` directive that you can use to show a terminal view with commands and output.
+You can customise the prompt and configure whether the lines should wrap.
+
+#### Enable the extension
+
+Add `terminal-output` to your extensions list in `conf.py` to enable the extension:
+
+    extensions = [
+                  (...),
+             ￼    "terminal-output"
+                 ]
+
+#### Style the output
+
+The extension comes with a CSS file that implements the classes needed to style the terminal output.
+You can override the style in your own style sheet.
+
+#### Add a terminal view
+
+To add a terminal view to your page, use the `:terminal:` directive and specify the the input (as `:input:` option) and output (as the main content of the directive).
+Any lines prefixed with `:input:` in the main content are treated as input as well.
+
+To override the prompt (`user@host:~$` by default), specify the `:user:` and/or `:host:` options.
+To make the terminal scroll horizontally instead of wrapping long lines, add `:scroll:`.
+
+For example, in MyST syntax:
+
+````
+```{terminal}
+:input: command number one
+:user: root
+:host: vm
+
+output line one
+output line two
+:input: another command
+more output
+```
+````
