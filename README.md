@@ -156,3 +156,69 @@ This extension adds custom roles that can be used in rST.
 Currently implemented:
 
 - `spellexception` - Includes the provided text in `<spellexception></spellexception>`, which makes it possible to exclude it from a spell checker.
+
+### Config options
+
+This extension adds a `:config:option:` directive that you can use to generate expandable configuration options, a `:config:option:` role for linking to those options, and an index that lists all config options.
+
+#### Enable the extension
+
+Add `config-options` to your extensions list in `conf.py` to enable the extension:
+
+    extensions = [
+                  (...),
+                  "config-options"
+                 ]
+
+#### Style the output
+
+The extension comes with a CSS file that implements the classes needed to style the configuration options.
+You can override the style in your own style sheet.
+
+#### Add configuration options
+
+Use the `:config:option:` directive to add a configuration option.
+It takes two parameters: the config option name and the scope.
+If the scope is not provided, `server` is used as the default scope.
+
+You must provide a `:shortdesc:` option.
+Optional options are `:type:`, `:liveupdate:`, `:condition:`, `:readonly:`, `:resource:`, `:managed:`, `:required:`, and `:scope:` (this scope is not related to the option scope specified by the parameter).
+
+You can use formatting in the short description, the options, and the main description.
+When starting a value with markup, or if you want to prevent a value from being processed (for example, to prevent a "no" value to be transformed to "False"), put quotes around the value.
+
+For example, in MyST syntax:
+
+````
+```{config:option} backups.compression_algorithm server
+:shortdesc: Compression algorithm for images
+:type: string
+:scope: global
+:default: "`gzip`"
+
+Compression algorithm to use for new images (`bzip2`, `gzip`, `lzma`, `xz` or `none`)
+```
+````
+
+For more examples, see https://linuxcontainers.org/lxd/docs/latest/networks/config_options_cheat_sheet.
+
+#### Link to configuration options
+
+To link to a configuration option, use the `:config:option:` role.
+You cannot override the link text (which wouldn't make much sense anyway, because it is displayed as code).
+
+For example, in MyST syntax:
+
+```
+{config:option}`instance:migration.incremental.memory.iterations`
+```
+
+#### Link to the index
+
+You can link to the index of configuration options with the `config-options` anchor.
+
+For example, in MyST syntax:
+
+```
+{ref}`config-options`
+```
