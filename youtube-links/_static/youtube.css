@@ -26,3 +26,8 @@ p.youtube_link span {
     font-size: small;
     max-width: 70px;
 }
+
+/* The YouTube link should not span into the next section */
+section {
+    clear: right;
+}
