@@ -45,9 +45,11 @@
 import requests
 import json
 from bs4 import BeautifulSoup
+from sphinx.util import logging
 from . import common
 
 cache = {}
+logger = logging.getLogger(__name__)
 
 
 def setup_func(app, pagename, templatename, context, doctree):
@@ -72,7 +74,9 @@ def setup_func(app, pagename, templatename, context, doctree):
                         title = json.loads(r.text)["title"]
                         cache[post] = title
                     except requests.HTTPError as err:
-                        print(err)
+                        logger.warning(pagename + ": " + str(err))
+                    except requests.ConnectionError as err:
+                        logger.warning(pagename + ": " + str(err))
 
                 if title:
                     linklist += '<li><a href="' + linkurl
@@ -107,10 +111,20 @@ def setup_func(app, pagename, templatename, context, doctree):
                         r = requests.get(link)
                         r.raise_for_status()
                         soup = BeautifulSoup(r.text, "html.parser")
-                        title = soup.title.get_text()
-                        cache[link] = title
+                        if soup is None:
+                            logger.warning(
+                                pagename
+                                + ": "
+                                + link
+                                + " doesn't have a title."
+                            )
+                        else:
+                            title = soup.title.get_text()
+                            cache[link] = title
                     except requests.HTTPError as err:
-                        print(err)
+                        logger.warning(pagename + ": " + str(err))
+                    except requests.ConnectionError as err:
+                        logger.warning(pagename + ": " + str(err))
 
                 if title:
                     linklist += '<li><a href="' + link + '" target="_blank">'
