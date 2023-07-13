@@ -17,6 +17,22 @@
 #   discourse: 12033,13128
 #   ---
 #
+#   You can use different Discourse instances by defining prefixes
+#   for each instance. For example:
+#
+#   html_context = {
+#       "discourse_prefix": {
+#           "lxc": "https://discuss.linuxcontainers.org/t/",
+#           "ubuntu": "https://discourse.ubuntu.com/t/"
+#       }
+#   }
+#
+#   Use these prefixes when linking (no prefix = first dict entry)
+#
+#   ---
+#   discourse: ubuntu:12033,lxc:13128
+#   ---
+#
 # - Add related URLs to the metadata at the top of the page using
 #   the tag "relatedlinks". The link text is extracted automatically
 #   or can be specified in Markdown syntax. Note that spaces are
@@ -63,7 +79,25 @@ def setup_func(app, pagename, templatename, context, doctree):
 
             for post in posts:
                 title = ""
-                linkurl = context["discourse_prefix"] + post
+
+                if type(context["discourse_prefix"]) is dict:
+                    ID = post.split(":")
+                    if len(ID) == 1:
+                        linkurl = list(
+                            context["discourse_prefix"].values()
+                        )[0] + post
+                    elif ID[0] in context["discourse_prefix"]:
+                        linkurl = context["discourse_prefix"][ID[0]] + ID[1]
+                    else:
+                        logger.warning(
+                            pagename
+                            + ": Discourse prefix "
+                            + ID[0]
+                            + " is not defined."
+                        )
+                        continue
+                else:
+                    linkurl = context["discourse_prefix"] + post
 
                 if post in cache:
                     title = cache[post]
