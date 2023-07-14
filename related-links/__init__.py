@@ -17,6 +17,22 @@
 #   discourse: 12033,13128
 #   ---
 #
+#   You can use different Discourse instances by defining prefixes
+#   for each instance. For example:
+#
+#   html_context = {
+#       "discourse_prefix": {
+#           "lxc": "https://discuss.linuxcontainers.org/t/",
+#           "ubuntu": "https://discourse.ubuntu.com/t/"
+#       }
+#   }
+#
+#   Use these prefixes when linking (no prefix = first dict entry)
+#
+#   ---
+#   discourse: ubuntu:12033,lxc:13128
+#   ---
+#
 # - Add related URLs to the metadata at the top of the page using
 #   the tag "relatedlinks". The link text is extracted automatically
 #   or can be specified in Markdown syntax. Note that spaces are
@@ -45,9 +61,11 @@
 import requests
 import json
 from bs4 import BeautifulSoup
+from sphinx.util import logging
 from . import common
 
 cache = {}
+logger = logging.getLogger(__name__)
 
 
 def setup_func(app, pagename, templatename, context, doctree):
@@ -61,7 +79,25 @@ def setup_func(app, pagename, templatename, context, doctree):
 
             for post in posts:
                 title = ""
-                linkurl = context["discourse_prefix"] + post
+
+                if type(context["discourse_prefix"]) is dict:
+                    ID = post.split(":")
+                    if len(ID) == 1:
+                        linkurl = list(
+                            context["discourse_prefix"].values()
+                        )[0] + post
+                    elif ID[0] in context["discourse_prefix"]:
+                        linkurl = context["discourse_prefix"][ID[0]] + ID[1]
+                    else:
+                        logger.warning(
+                            pagename
+                            + ": Discourse prefix "
+                            + ID[0]
+                            + " is not defined."
+                        )
+                        continue
+                else:
+                    linkurl = context["discourse_prefix"] + post
 
                 if post in cache:
                     title = cache[post]
@@ -72,7 +108,9 @@ def setup_func(app, pagename, templatename, context, doctree):
                         title = json.loads(r.text)["title"]
                         cache[post] = title
                     except requests.HTTPError as err:
-                        print(err)
+                        logger.warning(pagename + ": " + str(err))
+                    except requests.ConnectionError as err:
+                        logger.warning(pagename + ": " + str(err))
 
                 if title:
                     linklist += '<li><a href="' + linkurl
@@ -107,10 +145,20 @@ def setup_func(app, pagename, templatename, context, doctree):
                         r = requests.get(link)
                         r.raise_for_status()
                         soup = BeautifulSoup(r.text, "html.parser")
-                        title = soup.title.get_text()
-                        cache[link] = title
+                        if soup is None:
+                            logger.warning(
+                                pagename
+                                + ": "
+                                + link
+                                + " doesn't have a title."
+                            )
+                        else:
+                            title = soup.title.get_text()
+                            cache[link] = title
                     except requests.HTTPError as err:
-                        print(err)
+                        logger.warning(pagename + ": " + str(err))
+                    except requests.ConnectionError as err:
+                        logger.warning(pagename + ": " + str(err))
 
                 if title:
                     linklist += '<li><a href="' + link + '" target="_blank">'

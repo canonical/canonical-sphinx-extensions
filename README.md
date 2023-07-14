@@ -34,6 +34,15 @@ If you want to add Discourse links, you must also configure the prefix for your 
                     "discourse_prefix": "https://discuss.linuxcontainers.org/t/"
                    }
 
+You can configure different Discourse prefixes by specifying a dict:
+
+    html_context = {
+                    (...),
+                    "discourse_prefix": {
+                        "lxc": "https://discuss.linuxcontainers.org/t/",
+                        "ubuntu": "https://discourse.ubuntu.com/t/"}
+                    }
+
 #### Add related links to the template
 
 The extension provides two functions that can be used in your template:
@@ -96,6 +105,7 @@ You can override these styles or define your own, depending on the theme and tem
 Specify your Discourse links and related links in the metadata at the top of the page.
 
 For Discourse links, specify only the topic IDs (in a comma-separated list).
+If you have defined several Discourse prefixes, specify both key and ID (for example, `abc:1234`).
 
 For related links, specify the full URLs (in a comma-separated list).
 The link text is extracted automatically or can be specified in Markdown syntax.
