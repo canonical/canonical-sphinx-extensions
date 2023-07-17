@@ -145,7 +145,7 @@ def setup_func(app, pagename, templatename, context, doctree):
                         r = requests.get(link)
                         r.raise_for_status()
                         soup = BeautifulSoup(r.text, "html.parser")
-                        if soup is None:
+                        if soup.title is None:
                             logger.warning(
                                 pagename
                                 + ": "
