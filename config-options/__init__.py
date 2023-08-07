@@ -6,8 +6,10 @@ from sphinx.domains import Domain, Index
 from sphinx.roles import XRefRole
 from sphinx.directives import ObjectDescription
 from sphinx.util.nodes import make_refnode
-from sphinx.errors import SphinxWarning
+from sphinx.util import logging
 from . import common
+
+logger = logging.getLogger(__name__)
 
 
 # Parse rST inside an option (":something:")
@@ -49,6 +51,13 @@ class ConfigOption(ObjectDescription):
         key = nodes.inline()
         key += nodes.literal(text=self.arguments[0])
         key["classes"].append("key")
+
+        if "shortdesc" not in self.options:
+            logger.warning("The option fields for the "
+                           + self.arguments[0]
+                           + " option could not be parsed. "
+                           + "No output was generated.")
+            return []
 
         shortDesc = parseOption(self, self.options["shortdesc"])
         shortDesc["classes"].append("shortdesc")
@@ -170,7 +179,7 @@ class ConfigDomain(Domain):
             return refNode
 
         else:
-            raise SphinxWarning(
+            logger.warning(
                 "Could not find target " + target + " in " + fromdocname
             )
             return []
