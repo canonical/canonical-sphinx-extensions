@@ -25,6 +25,7 @@ class ConfigOption(ObjectDescription):
 
     optional_fields = {
         "type": "Type",
+        "default": "Default",
         "liveupdate": "Live update",
         "condition": "Condition",
         "readonly": "Read-only",
@@ -46,6 +47,14 @@ class ConfigOption(ObjectDescription):
 
     def run(self):
 
+        # Create a targetID and target
+
+        scope = "server"
+        if len(self.arguments) > 1:
+            scope = self.arguments[1]
+        targetID = scope + ":" + self.arguments[0]
+        targetNode = nodes.target("", "", ids=[targetID])
+
         # Generate the output
 
         key = nodes.inline()
@@ -53,41 +62,68 @@ class ConfigOption(ObjectDescription):
         key["classes"].append("key")
 
         if "shortdesc" not in self.options:
-            logger.warning("The option fields for the "
-                           + self.arguments[0]
-                           + " option could not be parsed. "
-                           + "No output was generated.")
+            logger.warning(
+                "The option fields for the "
+                + self.arguments[0]
+                + " option could not be parsed. "
+                + "No output was generated."
+            )
             return []
 
         shortDesc = parseOption(self, self.options["shortdesc"])
         shortDesc["classes"].append("shortdesc")
 
-        default = nodes.inline()
-        default["classes"].append("default")
-        if "default" in self.options:
-            default += nodes.strong(text="Default: ")
-            parsedDefault = parseOption(self, self.options["default"])
-            parsedDefault["classes"].append("ignoreP")
-            default += parsedDefault
+        anchor = nodes.inline()
+        anchor["classes"].append("anchor")
+        refnode = nodes.reference("", refuri="#" + targetID)
+        refnode += nodes.raw(
+            text='<i class="icon"><svg>'
+            + '<use href="#svg-arrow-right"></use></svg></i>',
+            format="html",
+        )
+        anchor += refnode
 
         firstLine = nodes.container()
         firstLine["classes"].append("basicinfo")
         firstLine += key
         firstLine += shortDesc
-        firstLine += default
+        firstLine += anchor
 
         details = nodes.container()
         details["classes"].append("details")
-        fields = nodes.bullet_list()
+        fields = nodes.table()
         fields["classes"].append("fields")
+        tgroup = nodes.tgroup(cols=2)
+        fields += tgroup
+        tgroup += nodes.colspec(colwidth=1)
+        tgroup += nodes.colspec(colwidth=3)
+        rows = []
+        # Add the key name again
+        row_node = nodes.row()
+        desc_entry = nodes.entry()
+        desc_entry += nodes.strong(text="Key: ")
+        val_entry = nodes.entry()
+        val_entry += nodes.literal(text=self.arguments[0])
+        row_node += desc_entry
+        row_node += val_entry
+        rows.append(row_node)
+        # Add the other fields
         for field in self.optional_fields:
             if field in self.options:
-                item = nodes.list_item()
-                item += nodes.strong(text=self.optional_fields[field] + ": ")
+                row_node = nodes.row()
+                desc_entry = nodes.entry()
+                desc_entry += nodes.strong(text=self.optional_fields[field]
+                                           + ": ")
                 parsedOption = parseOption(self, self.options[field])
                 parsedOption["classes"].append("ignoreP")
-                item += parsedOption
-                fields += item
+                val_entry = nodes.entry()
+                val_entry += parsedOption
+                row_node += desc_entry
+                row_node += val_entry
+                rows.append(row_node)
+        tbody = nodes.tbody()
+        tbody.extend(rows)
+        tgroup += tbody
         details += fields
         self.state.nested_parse(self.content, self.content_offset, details)
 
@@ -97,14 +133,6 @@ class ConfigOption(ObjectDescription):
         newNode["classes"].append("configoption")
         newNode += firstLine
         newNode += details
-
-        # Create a target
-
-        scope = "server"
-        if len(self.arguments) > 1:
-            scope = self.arguments[1]
-        targetID = scope + ":" + self.arguments[0]
-        targetNode = nodes.target("", "", ids=[targetID])
 
         # Register the target with the domain
 
@@ -130,8 +158,9 @@ class ConfigIndex(Index):
         options = sorted(options, key=lambda option: option[0])
 
         for _name, dispname, typ, docname, anchor, _priority in options:
-            # group by scope
-            content[anchor.partition(":")[0]].append(
+            # group by the first part of the scope
+            # ("XXX" if the scope is "XXX-YYY")
+            content[anchor.partition(":")[0].partition("-")[0]].append(
                 (dispname, 0, docname, anchor, "", "", "")
             )
 
