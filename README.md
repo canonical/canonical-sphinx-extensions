@@ -183,6 +183,13 @@ Add `config-options` to your extensions list in `conf.py` to enable the extensio
 #### Style the output
 
 The extension comes with a CSS file that implements the classes needed to style the configuration options.
+This CSS file requires the following colour variables to be defined:
+
+- `color-content-foreground`: normal text colour
+- `color-link`: link text colour
+- `color-table-border`: colour for table borders
+- `color-orange`: contrast colour (used for table cell background)
+
 You can override the style in your own style sheet.
 
 #### Add configuration options
