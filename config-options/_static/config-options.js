@@ -4,7 +4,7 @@ $(document).ready(function() {
     $('.configoption div.details').prop("hidden","until-found");
 
     if ($(location).attr('hash')) {
-        $('#'+$.escapeSelector($(location).attr('hash').substr(1))+" .details").removeAttr("hidden");
+        $('div#'+$.escapeSelector($(location).attr('hash').substr(1))+" > .details").removeAttr("hidden");
     };
 
     /* Add icons to expand/collapse all options for one section */
