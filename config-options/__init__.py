@@ -26,6 +26,7 @@ class ConfigOption(ObjectDescription):
     optional_fields = {
         "type": "Type",
         "default": "Default",
+        "defaultdesc": "Default",
         "liveupdate": "Live update",
         "condition": "Condition",
         "readonly": "Read-only",
@@ -39,8 +40,7 @@ class ConfigOption(ObjectDescription):
     optional_arguments = 1
     has_content = True
     option_spec = {
-        "shortdesc": directives.unchanged_required,
-        "default": directives.unchanged,
+        "shortdesc": directives.unchanged_required
     }
     for field in optional_fields:
         option_spec[field] = directives.unchanged
