@@ -27,6 +27,7 @@ class ConfigOption(ObjectDescription):
         "type": "Type",
         "default": "Default",
         "defaultdesc": "Default",
+        "initialvaluedesc": "Initial value",
         "liveupdate": "Live update",
         "condition": "Condition",
         "readonly": "Read-only",
