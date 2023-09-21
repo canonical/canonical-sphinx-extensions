@@ -281,3 +281,55 @@ output line two
 more output
 ```
 ````
+
+### Filtered ToC
+
+This extension adds a `:filtered-toctree:` directive that is almost the same as the normal `:toctree:` directive but allows excluding pages based on specified filters.
+
+#### Enable the extension
+
+Add `filtered-toc` to your extensions list in `conf.py` to enable the extension:
+
+    extensions = [
+                  (...),
+             ￼    "filtered-toc"
+                 ]
+
+#### Configure the filters
+
+Define filters that you want to exclude from your documentation in the `toc_filter_exclude` variable in your `conf.py`.
+For example:
+
+    toc_filter_exclude = ['draft','internal']
+
+You can use environment variables or build parameters to distinguish between different settings for the `toc_filter_exclude` variable in your `conf.py`.
+For example:
+
+    if ('TOPICAL' in os.environ) and (os.environ['TOPICAL'] == 'True'):
+        toc_filter_exclude = ['diataxis']
+    else:
+        toc_filter_exclude = ['topical']
+
+#### Use the `:filtered-toctree:` directive
+
+The `:filtered-toctree:` directive works just as the normal `:toctree:` directive, but you can add a filter to each line.
+The filter must start and end with a colon (`:`) and contains any string in between.
+The string between the colons is what you would specify in the `toc_filter_exclude` variable (however, you can use any string, even if it's not specified in the `toc_filter_exclude` variable).
+
+You can put the filter either at the front of the line or right in front of the file name or path.
+You can only specify one filter per line.
+
+For example, in MyST syntax:
+
+````
+```{filtered-toctree}
+:maxdepth: 1
+
+:internal:/tutorial/first_steps
+:draft:Installation </installing>
+Get support <:external:/support>
+```
+````
+
+In this case, all three topics would be included by default.
+When setting `toc_filter_exclude = ['draft','internal']`, only `Get support` would be included.
