@@ -165,7 +165,9 @@ This extension adds custom roles that can be used in rST.
 
 Currently implemented:
 
-- `spellexception` - Includes the provided text in `<spellexception></spellexception>`, which makes it possible to exclude it from a spell checker.
+- `spellexception` - Includes the provided text in `<spellexception></spellexception>`, which makes it possible to exclude it from a spelling checker.
+- `monoref` - Renders the provided reference in code-style, which excludes the link text from the spelling checker.
+   You can provide either just the link (for example, ``:monoref:`www.example.com` ``, which results in `www.example.com` as the link text and `https://www.example.com` as the link URL) or a separate link text and URL (for example, ``:monoref:`xyzcommand <www.example.com>` ``).
 
 ### Config options
 
