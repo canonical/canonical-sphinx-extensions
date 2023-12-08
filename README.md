@@ -1,12 +1,14 @@
-# LXD Sphinx extensions
+# Canonical Sphinx extensions
 
-This package provides several Sphinx extensions that are used in the [LXD documentation](https://linuxcontainers.org/lxd/docs/master/), but can also be useful for other documentation sets.
+This package provides several Sphinx extensions that are used in Canonical documentation (for example, in the [documentation starter pack](https://github.com/canonical/sphinx-docs-starter-pack)).
+
+**Note:** This package used to be called `lxd-sphinx-extensions` but has been renamed to `canonical-sphinx-extensions`.
 
 ## Installation
 
 Install the package with the following command:
 
-    pip install lxd-sphinx-extensions
+    pip install canonical-sphinx-extensions
 
 ## Provided extensions
 
