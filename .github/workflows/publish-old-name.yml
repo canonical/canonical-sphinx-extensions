@@ -1,5 +1,8 @@
-name: Publish canonical-sphinx-extensions to PyPI
+name: Publish lxd-sphinx-extensions to PyPI
 on: workflow_dispatch
+defaults:
+  run:
+    working-directory: ./lxd-sphinx-extensions
 jobs:
   build:
     name: Build package
@@ -24,15 +27,15 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: python-package
-        path: dist/
+        path: lxd-sphinx-extensions/dist/
   publish:
-    name: Publish to PyPI
+    name: Publish to TestPyPI
     needs:
     - build
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/canonical-sphinx-extensions
+      url: https://pypi.org/p/lxd-sphinx-extensions
     permissions:
       id-token: write
     steps:
@@ -40,6 +43,8 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: python-package
-        path: dist/
+        path: lxd-sphinx-extensions/dist/
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        packages-dir: ./lxd-sphinx-extensions/dist/

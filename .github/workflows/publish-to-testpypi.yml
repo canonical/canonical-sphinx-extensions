@@ -1,4 +1,4 @@
-name: Publish canonical-sphinx-extensions to PyPI
+name: Publish canonical-sphinx-extensions to TestPyPI
 on: workflow_dispatch
 jobs:
   build:
@@ -26,13 +26,13 @@ jobs:
         name: python-package
         path: dist/
   publish:
-    name: Publish to PyPI
+    name: Publish to TestPyPI
     needs:
     - build
     runs-on: ubuntu-latest
     environment:
-      name: pypi
-      url: https://pypi.org/p/canonical-sphinx-extensions
+      name: testpypi
+      url: https://test.pypi.org/p/canonical-sphinx-extensions
     permissions:
       id-token: write
     steps:
@@ -43,3 +43,5 @@ jobs:
         path: dist/
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository-url: https://test.pypi.org/legacy/
