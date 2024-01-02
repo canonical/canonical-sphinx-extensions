@@ -11,6 +11,12 @@ def spellexception_role(
     return [node], []
 
 
+def none_role(
+    name, rawtext, text, lineno, inliner, options=None, content=None
+):
+    return [], []
+
+
 def literalref_role(
     name, rawtext, text, lineno, inliner, options=None, content=None
 ):
@@ -37,5 +43,6 @@ def literalref_role(
 def setup(app):
     app.add_role("spellexception", spellexception_role)
     app.add_role("literalref", literalref_role)
+    app.add_role("none", none_role)
 
     return
