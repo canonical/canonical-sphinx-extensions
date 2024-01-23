@@ -5,7 +5,9 @@ from sphinx.directives.other import TocTree
 def setup(app):
     app.add_config_value("toc_filter_exclude", [], "html")
     app.add_directive("filtered-toctree", FilteredTocTree)
-    return {"version": "1.0.0"}
+    return {"version": "1.0.0",
+            "parallel_read_safe": True,
+            "parallel_write_safe": True}
 
 
 class FilteredTocTree(TocTree):

@@ -45,4 +45,5 @@ def setup(app):
     app.add_role("literalref", literalref_role)
     app.add_role("none", none_role)
 
-    return
+    return {"parallel_read_safe": True,
+            "parallel_write_safe": True}
