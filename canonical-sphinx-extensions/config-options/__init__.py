@@ -226,6 +226,12 @@ class ConfigDomain(Domain):
             (key, key, "option", self.env.docname, scope + ":" + key, 0)
         )
 
+    def merge_domaindata(self, docnames, otherdata):
+
+        for option in otherdata["config_options"]:
+            if option not in self.data["config_options"]:
+                self.data["config_options"].append(option)
+
 
 def setup(app):
     app.add_domain(ConfigDomain)
