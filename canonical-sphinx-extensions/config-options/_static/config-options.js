@@ -8,7 +8,8 @@ $(document).ready(function() {
     };
 
     /* Add icons to expand/collapse all options for one section */
-    $('.configoption:first-of-type').before("<div class=\"expand-collapse\"><span class=\"expand-all\" title=\"Expand all\">⤋</span><span class=\"collapse-all\" title=\"Collapse all\">⤊</span></div>");
+    $('.configoption').before("<div class=\"expand-collapse\"><span class=\"expand-all\" title=\"Expand all\">⤋</span><span class=\"collapse-all\" title=\"Collapse all\">⤊</span></div>");
+    $('.configoption ~ .configoption').prev(".expand-collapse").remove();
 
     /* Make the option lines expandable */
     $('.configoption div.basicinfo').click(function() {
