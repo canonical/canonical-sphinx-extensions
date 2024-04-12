@@ -270,19 +270,35 @@ You can override the style in your own style sheet.
 To add a terminal view to your page, use the `:terminal:` directive and specify the the input (as `:input:` option) and output (as the main content of the directive).
 Any lines prefixed with `:input:` in the main content are treated as input as well.
 
-To override the prompt (`user@host:~$` by default), specify the `:user:` and/or `:host:` options.
+To override the prompt (`user@host:~$` by default), specify the `:user:`, `:dir:` and/or `:host:` options.
 To make the terminal scroll horizontally instead of wrapping long lines, add `:scroll:`.
 
 For example, in MyST syntax:
 
 ````
+Single command sample:
+
 ```{terminal}
-:input: command number one
+:input: single command
 :user: root
 :host: vm
+:dir: /tmp/dir/
 
 output line one
 output line two
+```
+
+Multiple command sample:
+
+```{terminal}
+:user: root
+:host: vm
+:dir: /tmp/dir/
+
+:input: a command
+output line one
+output line two
+
 :input: another command
 more output
 ```
