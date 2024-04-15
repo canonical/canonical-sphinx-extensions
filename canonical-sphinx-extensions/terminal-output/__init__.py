@@ -13,6 +13,7 @@ class TerminalOutput(Directive):
         "input": directives.unchanged,
         "user": directives.unchanged,
         "host": directives.unchanged,
+        "dir": directives.unchanged,
         "scroll": directives.unchanged,
     }
 
@@ -34,23 +35,23 @@ class TerminalOutput(Directive):
 
     def run(self):
 
-        # if :user: or :host: are provided, replace those in the prompt
+        # Build prompt with :user:, :host: and :dir: (whichever is provided)
 
-        command = "" if "input" not in self.options else self.options["input"]
-        user = "user" if "user" not in self.options else self.options["user"]
-        host = "host" if "host" not in self.options else self.options["host"]
-        prompt_text = user + "@" + host + ":~$ "
-        if user == "root":
-            prompt_text = prompt_text[:-2] + "# "
+        command = self.options["input"] if "input" in self.options else ""
+        user = self.options["user"] if "user" in self.options else "user"
+        host = self.options["host"] if "host" in self.options else "host"
+        dir = self.options["dir"] if "dir" in self.options else "~"
+        prompt_text = f"{user}@{host}:{dir}{'#' if user == 'root' else '$'} "
 
         out = nodes.container()
         out["classes"].append("terminal")
         if "scroll" in self.options:
             out["classes"].append("scroll")
 
-        # Add the original prompt and input
+        # Add the original prompt and input if the command is present
 
-        out.append(self.input_line(prompt_text, command))
+        if command:
+            out.append(self.input_line(prompt_text, command))
 
         # Go through the content and append all lines as output
         # except for the ones that start with ":input: " - those get
