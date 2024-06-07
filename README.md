@@ -110,7 +110,9 @@ For Discourse links, specify only the topic IDs (in a comma-separated list).
 If you have defined several Discourse prefixes, specify both key and ID (for example, `abc:1234`).
 
 For related links, specify the full URLs (in a comma-separated list).
+
 The link text is extracted automatically or can be specified in Markdown syntax.
+You can also specify a backup link text (using curly brackets instead of square brackets) that is used only if the link title cannot be extracted.
 Note that spaces are ignored; if you need spaces in the title, replace them with `&#32;`.
 If Sphinx complains about the metadata value because it starts with "[", enclose the full value in double quotes.
 
@@ -118,8 +120,8 @@ The following example uses MyST syntax for the metadata:
 
 ```
 ---
-discourse: 1234,56789
-relatedlinks: https://www.example.com, [Link&#32;text](https://www.example.com)
+discourse: 1234, abc:56789, abc:[Link&#32;text](1234)
+relatedlinks: https://www.example.com, [Link&#32;text](https://www.example.com), {Backup&#32;text}(https://www.example.com)
 ---
 ```
 
