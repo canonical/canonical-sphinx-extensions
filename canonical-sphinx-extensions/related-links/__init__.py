@@ -27,17 +27,14 @@
 #       }
 #   }
 #
-#   Use these prefixes when linking (no prefix = first dict entry)
+#   Use these prefixes when linking (no prefix = first dict entry):
 #
 #   ---
 #   discourse: ubuntu:12033,lxc:13128
 #   ---
 #
 # - Add related URLs to the metadata at the top of the page using
-#   the tag "relatedlinks". The link text is extracted automatically
-#   or can be specified in Markdown syntax. Note that spaces are
-#   ignored; if you need spaces in the title, replace them with &#32;.
-#   Some examples (in MyST syntax):
+#   the tag "relatedlinks":
 #
 #   ---
 #   relatedlinks: https://www.example.com
@@ -47,15 +44,47 @@
 #   relatedlinks: https://www.example.com, https://www.google.com
 #   ---
 #
-#   ---
-#   relatedlinks: "[Link&#32;text](https://www.example.com)"
-#   ---
+# In both methods, the link text is extracted automatically
+# or can be specified in Markdown syntax. Note that spaces are
+# ignored; if you need spaces in the title, replace them with &#32;.
 #
-#   If Sphinx complains about the metadata value because it starts
-#   with "[", enclose the full value in double quotes.
+# ---
+# discourse: [Link&#32;text](12033)
+# ---
 #
-# For both ways, check for errors in the output. Invalid links are
-# not added to the output.
+# ---
+# discourse: ubuntu:[Link&#32;text](12033)
+# ---
+#
+# ---
+# relatedlinks: [Link&#32;text](https://www.example.com)
+# ---
+#
+# If Sphinx complains about the metadata value because it starts
+# with "[", enclose the full value in double quotes.
+#
+# You can also specify a backup link text that is used only if the
+# title cannot be extracted automatically.
+# For this, use the same syntax as for specifying the link text, but
+# use "{" and "}" instead of "[" and "]".
+# If the backup text is used, Sphinx logs an error of type
+# canonical-sphinx-extensions.linktext (which you can suppress if
+# needed).
+#
+# ---
+# discourse: {Backup&#32;text}(12033)
+# ---
+#
+# ---
+# discourse: ubuntu:{Backup&#32;text}(12033)
+# ---
+#
+# ---
+# relatedlinks: {Backup&#32;text}(https://www.example.com)
+# ---
+#
+# Always check for errors in the output. Invalid links are not added
+# to the output.
 ######################################################################
 
 import requests
@@ -66,6 +95,13 @@ from . import common
 
 cache = {}
 logger = logging.getLogger(__name__)
+
+
+def log_warning(pagename, err, title):
+    msg = pagename + ": " + err
+    if title:
+        msg += "\nUsing backup link text instead: " + title
+    logger.warning(msg, type="canonical-sphinx-extensions", subtype="linktext")
 
 
 def setup_func(app, pagename, templatename, context, doctree):
@@ -79,15 +115,17 @@ def setup_func(app, pagename, templatename, context, doctree):
 
             for post in posts:
                 title = ""
+                postID = post
 
+                # determine the linkurl (which Discourse to link to)
+                # and strip this information from the postID
                 if type(context["discourse_prefix"]) is dict:
                     ID = post.split(":")
                     if len(ID) == 1:
-                        linkurl = list(
-                            context["discourse_prefix"].values()
-                        )[0] + post
+                        linkurl = list(context["discourse_prefix"].values())[0]
                     elif ID[0] in context["discourse_prefix"]:
-                        linkurl = context["discourse_prefix"][ID[0]] + ID[1]
+                        linkurl = context["discourse_prefix"][ID[0]]
+                        postID = ID[1]
                     else:
                         logger.warning(
                             pagename
@@ -97,23 +135,36 @@ def setup_func(app, pagename, templatename, context, doctree):
                         )
                         continue
                 else:
-                    linkurl = context["discourse_prefix"] + post
+                    linkurl = context["discourse_prefix"]
 
+                # determine the title (and maybe strip it from the postID)
                 if post in cache:
                     title = cache[post]
+                elif postID.startswith("[") and postID.endswith(")"):
+                    split = postID.partition("](")
+                    title = split[0][1:]
+                    postID = split[2][:-1]
                 else:
+
+                    if postID.startswith("{") and postID.endswith(")"):
+                        split = postID.partition("}(")
+                        # if a backup link text exist, fall back on it if no
+                        # other title can be retrieved
+                        title = split[0][1:]
+                        postID = split[2][:-1]
+
                     try:
-                        r = requests.get(linkurl + ".json")
+                        r = requests.get(linkurl + postID + ".json")
                         r.raise_for_status()
                         title = json.loads(r.text)["title"]
                         cache[post] = title
                     except requests.HTTPError as err:
-                        logger.warning(pagename + ": " + str(err))
+                        log_warning(pagename, str(err), title)
                     except requests.ConnectionError as err:
-                        logger.warning(pagename + ": " + str(err))
+                        log_warning(pagename, str(err), title)
 
                 if title:
-                    linklist += '<li><a href="' + linkurl
+                    linklist += '<li><a href="' + linkurl + postID
                     linklist += '" target="_blank">' + title + "</a></li>"
 
             linklist += "</ul>"
@@ -141,24 +192,30 @@ def setup_func(app, pagename, templatename, context, doctree):
                     title = split[0][1:]
                     link = split[2][:-1]
                 else:
+
+                    if link.startswith("{") and link.endswith(")"):
+                        split = link.partition("}(")
+                        # if a backup link text exist, fall back on it if no
+                        # other title can be retrieved
+                        title = split[0][1:]
+                        link = split[2][:-1]
+
                     try:
                         r = requests.get(link)
                         r.raise_for_status()
                         soup = BeautifulSoup(r.text, "html.parser")
                         if soup.title is None:
-                            logger.warning(
-                                pagename
-                                + ": "
-                                + link
-                                + " doesn't have a title."
+                            log_warning(
+                                pagename, link + " doesn't have a title.",
+                                title
                             )
                         else:
                             title = soup.title.get_text()
                             cache[link] = title
                     except requests.HTTPError as err:
-                        logger.warning(pagename + ": " + str(err))
+                        log_warning(pagename, str(err), title)
                     except requests.ConnectionError as err:
-                        logger.warning(pagename + ": " + str(err))
+                        log_warning(pagename, str(err), title)
 
                 if title:
                     linklist += '<li><a href="' + link + '" target="_blank">'
