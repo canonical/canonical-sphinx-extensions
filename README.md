@@ -26,7 +26,7 @@ Add `related-links` to your extensions list in `conf.py` to enable the extension
 
     extensions = [
                   (...),
-             ￼    "related-links"
+             ￼    "canonical.related-links"
                  ]
 
 If you want to add Discourse links, you must also configure the prefix for your Discourse instance in the `html_context` variable:
@@ -135,7 +135,7 @@ Add `youtube-links` to your extensions list in `conf.py` to enable the extension
 
     extensions = [
                   (...),
-             ￼    "youtube-links"
+             ￼    "canonical.youtube-links"
                  ]
 
 #### Style the output
@@ -185,7 +185,7 @@ Add `config-options` to your extensions list in `conf.py` to enable the extensio
 
     extensions = [
                   (...),
-                  "config-options"
+                  "canonical.config-options"
                  ]
 
 #### Style the output
@@ -259,7 +259,7 @@ Add `terminal-output` to your extensions list in `conf.py` to enable the extensi
 
     extensions = [
                   (...),
-             ￼    "terminal-output"
+             ￼    "canonical.terminal-output"
                  ]
 
 #### Style the output
@@ -316,7 +316,7 @@ Add `filtered-toc` to your extensions list in `conf.py` to enable the extension:
 
     extensions = [
                   (...),
-             ￼    "filtered-toc"
+             ￼    "canonical.filtered-toc"
                  ]
 
 #### Configure the filters
