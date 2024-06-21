@@ -357,3 +357,67 @@ Get support <:external:/support>
 
 In this case, all three topics would be included by default.
 When setting `toc_filter_exclude = ['draft','internal']`, only `Get support` would be included.
+
+### Contributor listing
+
+This extension allows adding a link that displays all contributors for a page.
+The contributors are retrieved from the Git history of each file.
+The link can be displayed at any place in the output by adapting the Sphinx template.
+
+#### Enable the extension
+
+Add `canonical.contributor-listing` to your extensions list in `conf.py` to enable the extension:
+
+    extensions = [
+                  (...),
+             ￼    "canonical.contributor-listing"
+                 ]
+
+You can then control whether contributors are displayed by setting the `display_contributors` field in the `html_context` variable:
+
+    html_context = {
+                    (...),
+                    "display_contributors": True,
+                   }
+
+You can configure a time frame for retrieving contributors by specifying a value for `display_contributors_since`:
+
+    html_context = {
+                    (...),
+                    "display_contributors_since": "3 months",
+                    }
+
+#### Add contributor link to the template
+
+The extension provides a `get_contributors_for_file` function that can be used in your template.
+This function returns an alphabetical list of tuples that contain the name of the contributor and the link to their latest commit to the file.
+
+For example, to include the contributor link in your template based on the Furo theme, place code similar to the following at an appropriate location in your `_templates/footer.html` file:
+
+```
+    {% if display_contributors and pagename and page_source_suffix %}
+        {% set contributors = get_contributors_for_file(pagename, page_source_suffix) %}
+        {% if contributors %}
+          {% if contributors | length > 1 %}
+              <a class="display-contributors">Thanks to the {{ contributors |length }} contributors!</a>
+          {% else %}
+              <a class="display-contributors">Thanks to our contributor!</a>
+          {% endif %}
+          <div id="overlay"></div>
+          <ul class="all-contributors">
+              {% for contributor in contributors %}
+                  <li>
+                      <a href="{{ contributor[1] }}" class="contributor">{{ contributor[0] }}</a>
+                  </li>
+              {% endfor %}
+          </ul>
+        {% endif %}
+    {% endif %}
+```
+
+See the [Sphinx documentation](https://www.sphinx-doc.org/en/master/templating.html#jinja-sphinx-templating-primer) for information on how templating works in Sphinx.
+
+#### Style the output
+
+The extension comes with a CSS file that is suitable for the template example as given above.
+You can override these styles or define your own, depending on the theme and template that you use.
