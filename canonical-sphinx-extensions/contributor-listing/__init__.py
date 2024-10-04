@@ -53,7 +53,13 @@ def setup_func(app, pagename, templatename, context, doctree):
             ):
                 since = context["display_contributors_since"]
 
-            commits = repo.iter_commits(paths=paths, since=since)
+            try:
+                commits = repo.iter_commits(paths=paths, since=since)
+            except ValueError as e:
+                logger.warning(
+                    "Failed to iterate through the Git commits: " + str(e)
+                )
+                return
 
             contributors_dict = {}
             for commit in commits:
