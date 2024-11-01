@@ -116,7 +116,7 @@ def setup(app: Sphinx) -> ExtensionMetadata:
     }
 
 
-def parse_state(s: str, default=True) -> t.Optional[bool]:
+def parse_state(s: str) -> t.Optional[bool]:
     """
     Converts the :class:`str` *s* into a :class:`bool` or :data:`None` for the
     various supported states.
