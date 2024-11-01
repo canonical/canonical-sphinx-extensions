@@ -88,7 +88,6 @@ from __future__ import annotations
 
 import io
 import re
-import json
 import time
 import functools
 import itertools
@@ -102,7 +101,7 @@ from urllib.error import HTTPError
 
 from docutils import nodes
 from sphinx.application import Sphinx
-from sphinx.util.docutils import SphinxDirective, SphinxRole
+from sphinx.util.docutils import SphinxDirective
 from sphinx.util.typing import ExtensionMetadata
 from sphinx.addnodes import download_reference
 
@@ -326,7 +325,7 @@ class Image(t.NamedTuple):
 
 @functools.lru_cache()
 def get_releases(
-    url: str='https://changelogs.ubuntu.com/meta-release'
+    url: str = 'https://changelogs.ubuntu.com/meta-release'
 ) -> list[Release]:
     """
     Given a meta-release *url*, return a :class:`list` of :class:`Release`
@@ -348,8 +347,8 @@ def get_releases(
 
 def filter_releases(
     releases: t.Sequence[Release],
-    spec: str='', lts: t.Optional[bool]=None,
-    supported: t.Optional[bool]=None
+    spec: str = '', lts: t.Optional[bool] = None,
+    supported: t.Optional[bool] = None
 ) -> t.Sequence[Release]:
     """
     Filters *releases*, a sequence of :class:`Release` tuples, according to
@@ -393,7 +392,7 @@ def filter_releases(
                 j = len(rel_order) if elem[1] == '' else rel_order.index(elem[1]) + 1
                 rel_selected.extend(rel_order[i:j])
             elif isinstance(elem, str):
-                rel_order.index(elem) # Raise ValueError if invalid codename
+                rel_order.index(elem)  # raises ValueError if invalid codename
                 rel_selected.append(elem)
         rel_map = {release.codename: release for release in releases}
         result = [
@@ -456,7 +455,7 @@ def get_images(url: str) -> list[Image]:
             # Evidently not a file row
             continue
         files[name] = (url + name, date, size)
-    if not 'SHA256SUMS' in files:
+    if 'SHA256SUMS' not in files:
         raise ValueError(f'SHA256SUMS file is missing from {url}')
     # Add SHA256 checksums and filter out anything that isn't an image
     result = []
@@ -480,10 +479,10 @@ def get_images(url: str) -> list[Image]:
 
 def filter_images(
     images: t.Sequence[Image],
-    archs: t.Optional[set[str]]=None,
-    image_types: t.Optional[set[str]]=None,
-    suffix: t.Optional[str]=None,
-    matches: t.Optional[re.Pattern]=None,
+    archs: t.Optional[set[str]] = None,
+    image_types: t.Optional[set[str]] = None,
+    suffix: t.Optional[str] = None,
+    matches: t.Optional[re.Pattern] = None,
 ) -> t.Sequence[Image]:
     """
     Filters *images*, a sequence of :class:`Image` tuples, according to the
@@ -712,7 +711,6 @@ def _make_sums(files):
 
 
 def _make_releases():
-    from textwrap import dedent
     from email.utils import formatdate
 
     releases = [
