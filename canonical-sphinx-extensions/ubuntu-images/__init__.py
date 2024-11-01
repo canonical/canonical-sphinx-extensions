@@ -159,17 +159,17 @@ def parse_set(s: str) -> set[str]:
 
 class UbuntuImagesDirective(SphinxDirective):
     option_spec = {
-        'releases':          str,
-        'state':             parse_state,
-        'lts-only':          lambda s: True,
-        'image-types':       parse_set,
-        'archs':             parse_set,
-        'suffix':            lambda s: '' if s is None else str(s),
-        'matches':           re.compile,
+        'releases': str,
+        'state': parse_state,
+        'lts-only': lambda s: True,
+        'image-types': parse_set,
+        'archs': parse_set,
+        'suffix': lambda s: '' if s is None else str(s),
+        'matches': re.compile,
         # The following options are intended for testing / advanced purposes
         # only; they override the URLs used to fetch information
-        'meta-release':      str,
-        'cdimage-template':  str,
+        'meta-release': str,
+        'cdimage-template': str,
     }
 
     def run(self) -> list[nodes.Node]:
@@ -205,6 +205,7 @@ class UbuntuImagesDirective(SphinxDirective):
                 release_item.append(image_list)
                 release_list.append(release_item)
         return [release_list]
+
 
 # Copy doc-string from the module for the class
 UbuntuImagesDirective.__doc__ = __doc__
@@ -259,6 +260,7 @@ image_re = re.compile(
     r'(?P<suffix>\+.*)?'
     r'\.(?P<file_type>img|iso)'
     r'(?:\.(?P<compression>gz|bz2|xz|zst))?$')
+
 
 class Image(t.NamedTuple):
     """
@@ -642,7 +644,7 @@ class TableParser(HTMLParser):
             self.state = 'tr'
 
 
-### TEST SUITE ################################################################
+# TEST SUITE ################################################################
 #
 # Everything from here on down is solely for the test-suite, which is
 # implemented as doctests. To test the module, just run the module directly.
