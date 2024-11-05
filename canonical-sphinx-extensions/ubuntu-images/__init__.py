@@ -409,20 +409,14 @@ def filter_releases(
     if spec:
         rel_order = [release.codename for release in releases]
         rel_spec = {
-            tuple(elem.split('-', 1)) if '-' in elem else elem
-            for elem in {
-                elem.strip() for elem in spec.replace(',', ' ').split()
-            }
+            tuple(elem.split('-', 1)) if '-' in elem else (elem, elem)
+            for elem in {elem.strip() for elem in spec.replace(",", " ").split()}
         }
         rel_selected = []
         for elem in rel_spec:
-            if isinstance(elem, tuple):
-                i = 0 if elem[0] == '' else rel_order.index(elem[0])
-                j = len(rel_order) if elem[1] == '' else rel_order.index(elem[1]) + 1
-                rel_selected.extend(rel_order[i:j])
-            elif isinstance(elem, str):
-                rel_order.index(elem)  # raises ValueError if invalid codename
-                rel_selected.append(elem)
+            i = 0 if elem[0] == '' else rel_order.index(elem[0])
+            j = len(rel_order) if elem[1] == '' else rel_order.index(elem[1])
+            rel_selected.extend(rel_order[i : j + 1])
         rel_map = {release.codename: release for release in releases}
         result = [
             rel_map[rel] for rel in sorted(rel_selected, key=rel_order.index)
