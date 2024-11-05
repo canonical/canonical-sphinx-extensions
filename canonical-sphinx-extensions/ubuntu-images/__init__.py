@@ -469,7 +469,7 @@ def get_images(url: str) -> list[Image]:
     files = {}
     for row in parser.table:
         try:
-            icon, name, date_str, size_str, description = row
+            _, name, date_str, size_str, _ = row
             name = name.strip()
             date = dt.datetime.strptime(
                 date_str.strip(), '%Y-%m-%d %H:%M').date()
@@ -563,11 +563,10 @@ def parse_size(s: str) -> int:
     s = s.strip().upper()
     for power, suffix in enumerate(['K', 'M', 'G', 'T'], start=1):
         if s.endswith(suffix):
-            n = float(s[:-len(suffix)])
-            return int(n * 1024**power)
-    else:
-        # No recognized suffix; attempt straight conversion
-        return int(s)
+            f = float(s[: -len(suffix)])
+            return int(f * 1024**power)
+    # No recognized suffix; attempt straight conversion
+    return int(s)
 
 
 def meta_parser(file: t.TextIO) -> t.Iterable[Release]:
@@ -598,10 +597,15 @@ def meta_parser(file: t.TextIO) -> t.Iterable[Release]:
             elif field == 'date':
                 parsed = parsedate(value)
                 if parsed is not None:
-                    d = time.struct_time(parsed)
+                    time_tuple = time.struct_time(parsed)
                     date = dt.datetime(
-                        d.tm_year, d.tm_mon, d.tm_mday,
-                        d.tm_hour, d.tm_min, d.tm_sec)
+                        time_tuple.tm_year,
+                        time_tuple.tm_mon,
+                        time_tuple.tm_mday,
+                        time_tuple.tm_hour,
+                        time_tuple.tm_min,
+                        time_tuple.tm_sec,
+                    )
         else:
             yield Release(codename, name, version, date, supported)
             del codename, name, version, date, supported
@@ -687,6 +691,7 @@ def _test_server(files, *, host='127.0.0.1', port=0):
     temporary directory upon exit. The URL of the root of the server is yielded
     by the context manager.
     """
+    # pylint: disable=import-outside-toplevel
     import tempfile
     import http.server
     from pathlib import Path
@@ -708,7 +713,7 @@ def _test_server(files, *, host='127.0.0.1', port=0):
 
         handler = functools.partial(SilentHandler, directory=temp)
         with http.server.ThreadingHTTPServer((host, port), handler) as httpd:
-            host, port, *other = httpd.server_address
+            host, port, *_ = httpd.server_address
             httpd_thread = Thread(target=httpd.serve_forever)
             httpd_thread.start()
             try:
@@ -728,6 +733,7 @@ def _make_sums(files):
     *files* with one additional entry titled "SHA256SUMS" which contains the
     output of the "sha256sum" command for the given content.
     """
+    # pylint: disable=import-outside-toplevel
     import hashlib
 
     files = files.copy()
@@ -739,6 +745,7 @@ def _make_sums(files):
 
 
 def _make_releases():
+    # pylint: disable=import-outside-toplevel
     from email.utils import formatdate
 
     releases = [
@@ -750,12 +757,13 @@ def _make_releases():
     paras = []
     for name, version, date_str, supported in releases:
         codename = name.lower().split()[0]
-        ts = dt.datetime.fromisoformat(date_str)
+        atime = dt.datetime.fromisoformat(date_str)
+        # pylint: disable=line-too-long
         paras.append(f"""
 Dist: {codename}
 Name: {name}
 Version: {version}
-Date: {formatdate(ts.timestamp())}
+Date: {formatdate(atime.timestamp())}
 Supported: {int(supported)}
 Description: This is the {version} release
 Release-File: http://archive.ubuntu.com/ubuntu/dists/{codename}-updates/Release
