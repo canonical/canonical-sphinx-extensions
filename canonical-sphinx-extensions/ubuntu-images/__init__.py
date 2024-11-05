@@ -107,6 +107,7 @@ from sphinx.addnodes import download_reference
 
 
 def setup(app: Sphinx) -> ExtensionMetadata:
+    "Called by Sphinx to install the extension."
     app.add_directive('ubuntu-images', UbuntuImagesDirective)
 
     return {
@@ -238,6 +239,7 @@ class Release(t.NamedTuple):
         A :class:`bool` indicating whether the release is currently supported
         or not.
     """
+
     codename: str
     name: str
     version: str
@@ -302,26 +304,51 @@ class Image(t.NamedTuple):
 
     @property
     def version(self) -> str:
+        """
+        A :class:`str` of the version of Ubuntu within the image, for example
+        "24.04" or "23.10".
+        """
         return self._parse_field('version')
 
     @property
     def image_type(self) -> str:
+        """
+        A :class:`str` indicating the type of image, for example
+        "preinstalled-server" or "live-server".
+        """
         return self._parse_field('image_type')
 
     @property
     def arch(self) -> str:
+        """
+        The architecture of the image, for example "amd64", "armhf", "riscv64".
+        """
         return self._parse_field('arch')
 
     @property
     def suffix(self) -> str:
+        """
+        A :class:`str` containing the suffix of the image filename. This is
+        typically a blank string, or a plus-prefixed string. For example
+        "+raspi", "+visionfive".
+        """
         return self._parse_field('suffix')
 
     @property
     def file_type(self) -> str:
+        """
+        A :class:`str` containing the first part of the file's extension,
+        typically "img" or "iso".
+        """
         return self._parse_field('file_type')
 
     @property
     def compression(self) -> str:
+        """
+        A :class:`str` containing the last part of the file's extension, if
+        present, indicating the compression used on the image. A blank string
+        indicates no compression. For example "gz", "xz", or "zst".
+        """
         return self._parse_field('compression')
 
 
@@ -616,6 +643,7 @@ class TableParser(HTMLParser):
         there is no requirement that the input is strictly valid XML, hence the
         lack of a closing ``<p>`` tag above is acceptable.
     """
+
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.state = 'html'
@@ -671,8 +699,12 @@ def _test_server(files, *, host='127.0.0.1', port=0):
     from threading import Thread
 
     class SilentHandler(http.server.SimpleHTTPRequestHandler):
+        """
+        Trivial derivative of SimpleHTTPRequestHandler that doesn't spam the
+        console with log messages.
+        """
+
         def log_message(self, fmt, *args):
-            # Don't spam the console
             pass
 
     with tempfile.TemporaryDirectory() as temp:
