@@ -63,16 +63,19 @@ def setup_func(app, pagename, templatename, context, doctree):
 
             contributors_dict = {}
             for commit in commits:
-                contributor = commit.author.name
-                if (
-                    contributor not in contributors_dict
-                    or commit.committed_date >
-                        contributors_dict[contributor]["date"]
-                ):
-                    contributors_dict[contributor] = {
-                        "date": commit.committed_date,
-                        "sha": commit.hexsha,
-                    }
+                contributors = [commit.author.name]
+                for co_author in commit.co_authors:
+                    contributors.append(co_author.name)
+                for contributor in contributors:
+                    if (
+                        contributor not in contributors_dict
+                        or commit.committed_date >
+                            contributors_dict[contributor]["date"]
+                    ):
+                        contributors_dict[contributor] = {
+                            "date": commit.committed_date,
+                            "sha": commit.hexsha,
+                        }
             # github_page contains the link to the contributor's latest commit
             contributors_list = [
                 (name, f"{context['github_url']}/commit/{data['sha']}")
