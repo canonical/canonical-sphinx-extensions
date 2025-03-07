@@ -604,7 +604,7 @@ class TableParser(HTMLParser):
     It stores the content of all ``<th>`` and ``<td>`` tags under each ``<tr>``
     tag in the :attr:`table` attribute as a list of lists (the outer list of
     rows, the inner lists of cells within those rows). All data is represented
-    as strings, or as ``None`` for entirely empty entries. For example::
+    as strings. For example::
 
         >>> html = '''
         ... <html><body><table>
@@ -618,7 +618,7 @@ class TableParser(HTMLParser):
         >>> parser = TableParser()
         >>> parser.feed(html)
         >>> parser.table
-        [['#', 'Name'], ['1', 'foo'], ['2', 'bar'], [None, 'quux']]
+        [['#', 'Name'], ['1', 'foo'], ['2', 'bar'], ['', 'quux']]
 
     .. note::
 
@@ -642,11 +642,11 @@ class TableParser(HTMLParser):
             self.table.append([])
         elif self.state == 'tr' and tag in ('th', 'td'):
             self.state = 'td'
-            self.table[-1].append(None)
+            self.table[-1].append('')
 
     def handle_data(self, data: str):
         if self.state == 'td':
-            self.table[-1][-1] = data
+            self.table[-1][-1] += data
 
     def handle_endtag(self, tag: str):
         if self.state == 'table' and tag == 'table':
