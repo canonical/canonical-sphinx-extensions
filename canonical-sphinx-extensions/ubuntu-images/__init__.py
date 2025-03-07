@@ -290,19 +290,12 @@ class Image(t.NamedTuple):
     .. attribute:: sha256
 
         A :class:`str` containing the SHA256 checksum of the file.
-
-    .. attribute:: size
-
-        An :class:`int` indicating the *approximate* file-size (this is scraped
-        from a human-formatted string and will *not* match the precise size
-        of the file).
     """
 
     url: str
     name: str
     date: dt.date
     sha256: str
-    size: int
 
     def _parse_field(self, field: str) -> str:
         matched = image_re.match(self.name)
@@ -462,8 +455,7 @@ def get_images(url: str) -> list[Image]:
         Image(url='http://.../ubuntu-21.10-bar-arm64+raspi.img.xz',
         name='ubuntu-21.10-bar-arm64+raspi.img.xz',
         date=datetime.date(2021, 10, 25),
-        sha256='e9cd9718e97ac951c0ead5de8069d0ff5de188620b12b02...',
-        size=703488)
+        sha256='e9cd9718e97ac951c0ead5de8069d0ff5de188620b12b02...')
     """
     # NOTE: This code relies on the current layout of pages on
     # cdimage.ubuntu.com; if extra tables or columns are introduced or
@@ -483,15 +475,14 @@ def get_images(url: str) -> list[Image]:
     files = {}
     for row in parser.table:
         try:
-            _, name, date_str, size_str, _ = row
+            _, name, date_str, _, _ = row
             name = name.strip()
             date = dt.datetime.strptime(
                 date_str.strip(), '%Y-%m-%d %H:%M').date()
-            size = parse_size(size_str)
         except ValueError:
             # Evidently not a file row
             continue
-        files[name] = (url + name, date, size)
+        files[name] = (url + name, date)
     if 'SHA256SUMS' not in files:
         raise ValueError(f'SHA256SUMS file is missing from {url}')
     # Add SHA256 checksums and filter out anything that isn't an image
@@ -506,8 +497,8 @@ def get_images(url: str) -> list[Image]:
             if name.startswith('*'):
                 name = name[1:]
             try:
-                url, date, size = files[name]
-                image = Image(url, name, date, cksum, size)
+                url, date = files[name]
+                image = Image(url, name, date, cksum)
                 if image_re.match(image.name):
                     result.append(image)
             except (KeyError, ValueError):
@@ -561,29 +552,6 @@ def filter_images(
         and (suffix is None or image.suffix == suffix)
         and (matches is None or matches.search(image.name))
     ]
-
-
-def parse_size(s: str) -> int:
-    """
-    Convert the string *s* to an approximate file-size.
-
-    The string *s* may either be an absolute number of bytes, or an approximate
-    number with one of the typical suffixes (K, M, G, etc.). For example::
-
-        >>> parse_size('1234')
-        1234
-        >>> parse_size('1K')
-        1024
-        >>> parse_size('2.5M')
-        2621440
-    """
-    s = s.strip().upper()
-    for power, suffix in enumerate(['K', 'M', 'G', 'T'], start=1):
-        if s.endswith(suffix):
-            f = float(s[: -len(suffix)])
-            return int(f * 1024**power)
-    # No recognized suffix; attempt straight conversion
-    return int(s)
 
 
 def meta_parser(file: t.TextIO) -> t.Iterable[Release]:
@@ -865,15 +833,13 @@ __test__ = {
         ... 'ubuntu-24.04.1-preinstalled-desktop-arm64+raspi.img.xz',
         ... 'ubuntu-24.04.1-preinstalled-desktop-arm64+raspi.img.xz',
         ... dt.datetime(2024, 8, 27, 14, 46, 0),
-        ... '5bd01d2a51196587b3fb2899a8f078a2a080278a83b3c8faa91f8daba750d00c',
-        ... 2.6*(1024**3))
+        ... '5bd01d2a51196587b3fb2899a8f078a2a080278a83b3c8faa91f8daba750d00c')
         >>> arm_img = Image(
         ... 'http://cdimage.ubuntu.com/releases/noble/release/'
         ... 'ubuntu-24.04.1-live-server-arm64.iso',
         ... 'ubuntu-24.04.1-live-server-arm64.iso',
         ... dt.datetime(2024, 8, 27, 15, 43, 0),
-        ... '5ceecb7ef5f976e8ab3fffee7871518c8e9927ec221a3bb548ee1193989e1773',
-        ... 2.3*(1024**3))
+        ... '5ceecb7ef5f976e8ab3fffee7871518c8e9927ec221a3bb548ee1193989e1773')
         >>> pi_img.version
         '24.04.1'
         >>> pi_img.image_type
@@ -952,8 +918,7 @@ __test__ = {
         Image(url='http://.../ubuntu-21.10-bar-arm64+raspi.img.xz',
         name='ubuntu-21.10-bar-arm64+raspi.img.xz',
         date=datetime.date(2021, 10, 25),
-        sha256='e9cd9718e97ac951c0ead5de8069d0ff5de188620b12b02...',
-        size=703488)
+        sha256='e9cd9718e97ac951c0ead5de8069d0ff5de188620b12b02...')
     """,
 
     'ignore-extra-cksums': """
@@ -974,8 +939,7 @@ __test__ = {
         Image(url='http://.../ubuntu-21.10-bar-arm64+raspi.img.xz',
         name='ubuntu-21.10-bar-arm64+raspi.img.xz',
         date=datetime.date(2021, 10, 25),
-        sha256='e9cd9718e97ac951c0ead5de8069d0ff5de188620b12b02...',
-        size=703488)
+        sha256='e9cd9718e97ac951c0ead5de8069d0ff5de188620b12b02...')
     """,
 
     'full-run': """
