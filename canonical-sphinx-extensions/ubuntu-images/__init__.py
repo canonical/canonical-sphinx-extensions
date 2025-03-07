@@ -511,7 +511,7 @@ def filter_images(
     archs: t.Optional[set[str]] = None,
     image_types: t.Optional[set[str]] = None,
     suffix: t.Optional[str] = None,
-    matches: t.Optional[re.Pattern] = None,
+    matches: t.Optional[re.Pattern[str]] = None,
 ) -> t.Sequence[Image]:
     """
     Filters *images*, a sequence of :class:`Image` tuples, according to the
@@ -627,14 +627,14 @@ class TableParser(HTMLParser):
         lack of a closing ``<p>`` tag above is acceptable.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
         self.state = 'html'
-        self.table = []
+        self.table: list[list[str]] = []
 
     def handle_starttag(
         self, tag: str, attrs: list[tuple[str, t.Optional[str]]]
-    ):
+    ) -> None:
         if self.state == 'html' and tag == 'table':
             self.state = 'table'
         elif self.state == 'table' and tag == 'tr':
@@ -644,11 +644,11 @@ class TableParser(HTMLParser):
             self.state = 'td'
             self.table[-1].append('')
 
-    def handle_data(self, data: str):
+    def handle_data(self, data: str) -> None:
         if self.state == 'td':
             self.table[-1][-1] += data
 
-    def handle_endtag(self, tag: str):
+    def handle_endtag(self, tag: str) -> None:
         if self.state == 'table' and tag == 'table':
             self.state = 'html'
         elif self.state == 'tr' and tag == 'tr':
@@ -664,7 +664,10 @@ class TableParser(HTMLParser):
 
 
 @contextlib.contextmanager
-def _test_server(files, *, host='127.0.0.1', port=0):
+def _test_server(
+    files: dict[str, bytes], *,
+    host: str = '127.0.0.1', port: int = 0
+) -> t.Iterator[str]:
     """
     This function provides a test HTTP server for the doctest suite.
 
@@ -678,7 +681,7 @@ def _test_server(files, *, host='127.0.0.1', port=0):
     temporary directory upon exit. The URL of the root of the server is yielded
     by the context manager.
     """
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable=import-outside-toplevel, too-many-locals
     # These imports are for the test-suite only
     import tempfile
     import http.server
@@ -693,7 +696,7 @@ def _test_server(files, *, host='127.0.0.1', port=0):
 
         # pylint: disable=redefined-builtin
         # The super-class uses format here
-        def log_message(self, format, *args):
+        def log_message(self, format: str, *args: t.Any) -> None:
             pass
 
     with tempfile.TemporaryDirectory() as temp:
@@ -703,7 +706,10 @@ def _test_server(files, *, host='127.0.0.1', port=0):
 
         handler = functools.partial(SilentHandler, directory=temp)
         with http.server.ThreadingHTTPServer((host, port), handler) as httpd:
-            host, port, *_ = httpd.server_address
+            host_raw, port, *_ = httpd.server_address
+            host = (
+                host_raw if isinstance(host_raw, str) else
+                host_raw.decode('ascii'))
             httpd_thread = Thread(target=httpd.serve_forever)
             httpd_thread.start()
             try:
@@ -714,7 +720,7 @@ def _test_server(files, *, host='127.0.0.1', port=0):
                 assert not httpd_thread.is_alive()
 
 
-def _make_sums(files):
+def _make_sums(files: dict[str, bytes]) -> dict[str, bytes]:
     """
     This function exists to generate SHA256SUMS files for the doctest suite.
 
@@ -735,7 +741,7 @@ def _make_sums(files):
     return files
 
 
-def _make_releases():
+def _make_releases() -> dict[str, bytes]:
     # pylint: disable=import-outside-toplevel
     # These imports are for the test-suite only
     from email.utils import formatdate
@@ -769,7 +775,10 @@ UpgradeToolSignature: {pre}/{codename}-updates/{suf}/{codename}.tar.gz.gpg""")
     return files
 
 
-def _make_index(files, timestamp=None):
+def _make_index(
+    files: dict[str, bytes],
+    timestamp: t.Optional[dt.datetime] = None
+) -> dict[str, bytes]:
     """
     This function generates index.html files for the doctest suite.
 
