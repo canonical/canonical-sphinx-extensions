@@ -84,6 +84,13 @@ Examples of usage::
         :lts-only:
 """
 
+# pylint: disable=too-many-lines
+# It's long, but only just (and most of it is test-suite and doc-strings)
+
+# pylint: disable=invalid-name
+# This is the naming convention used in this repo (and it makes a certain sense
+# given we're defining reST directives)
+
 from __future__ import annotations
 
 import io
@@ -102,7 +109,7 @@ from urllib.error import HTTPError
 from docutils import nodes
 from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective
-from sphinx.util.typing import ExtensionMetadata
+from sphinx.util.typing import ExtensionMetadata  # pylint: disable=no-name-in-module # noqa: E501
 from sphinx.addnodes import download_reference
 
 
@@ -354,7 +361,7 @@ class Image(t.NamedTuple):
 
 @functools.lru_cache()
 def get_releases(
-    url: str = 'https://changelogs.ubuntu.com/meta-release'
+    url: str = 'https://changelogs.ubuntu.com/meta-release',
 ) -> list[Release]:
     """
     Given a meta-release *url*, return a :class:`list` of :class:`Release`
@@ -368,16 +375,18 @@ def get_releases(
         Release(codename='warty', name='Warty Warthog', version='04.10',
         date=datetime.datetime(2004, 10, 20, 7, 28, 17), supported=False)
     """
-    with io.TextIOWrapper(
-        urlopen(url), encoding='utf-8', errors='strict'
-    ) as text:
+    with (
+        urlopen(url) as data,
+        io.TextIOWrapper(data, encoding='utf-8', errors='strict') as text
+    ):
         return list(meta_parser(text))
 
 
 def filter_releases(
     releases: t.Sequence[Release],
-    spec: str = '', lts: t.Optional[bool] = None,
-    supported: t.Optional[bool] = None
+    spec: str = "",
+    lts: t.Optional[bool] = None,
+    supported: t.Optional[bool] = None,
 ) -> t.Sequence[Release]:
     """
     Filters *releases*, a sequence of :class:`Release` tuples, according to
@@ -410,13 +419,15 @@ def filter_releases(
         rel_order = [release.codename for release in releases]
         rel_spec = {
             tuple(elem.split('-', 1)) if '-' in elem else (elem, elem)
-            for elem in {elem.strip() for elem in spec.replace(",", " ").split()}
+            for elem in {
+                elem.strip() for elem in spec.replace(",", " ").split()
+            }
         }
         rel_selected = []
         for elem in rel_spec:
             i = 0 if elem[0] == '' else rel_order.index(elem[0])
             j = len(rel_order) if elem[1] == '' else rel_order.index(elem[1])
-            rel_selected.extend(rel_order[i : j + 1])
+            rel_selected.extend(rel_order[i:j + 1])
         rel_map = {release.codename: release for release in releases}
         result = [
             rel_map[rel] for rel in sorted(rel_selected, key=rel_order.index)
@@ -424,7 +435,8 @@ def filter_releases(
     else:
         result = list(releases)
     result = [
-        rel for rel in result
+        rel
+        for rel in result
         if (lts is None or rel.is_lts == lts)
         and (supported is None or rel.supported == supported)
     ]
@@ -458,13 +470,15 @@ def get_images(url: str) -> list[Image]:
     # re-ordered this will need revisiting...
     parser = TableParser()
     try:
-        with io.TextIOWrapper(
-            urlopen(url), encoding='utf-8', errors='strict'
-        ) as page:
+        with (
+            urlopen(url) as data,
+            io.TextIOWrapper(data, encoding='utf-8', errors='strict') as page,
+        ):
             parser.feed(page.read())
     except HTTPError:
         raise ValueError(
-            f'unable to get {url}; are you sure the path is correct?') from None
+            f'unable to get {url}; are you sure the path '
+            f'is correct?') from None
     # Grab all the files in the directory
     files = {}
     for row in parser.table:
@@ -482,9 +496,10 @@ def get_images(url: str) -> list[Image]:
         raise ValueError(f'SHA256SUMS file is missing from {url}')
     # Add SHA256 checksums and filter out anything that isn't an image
     result = []
-    with io.TextIOWrapper(
-        urlopen(url + 'SHA256SUMS'), encoding='utf-8', errors='strict'
-    ) as hashes:
+    with (
+        urlopen(url + 'SHA256SUMS') as data,
+        io.TextIOWrapper(data, encoding='utf-8', errors='strict') as hashes
+    ):
         for line in hashes:
             cksum, name = line.strip().split(None, 1)
             cksum = cksum.strip().lower()
@@ -513,26 +528,28 @@ def filter_images(
     :class:`UbuntuImageDirective` for a detailed description of these options.
     For example::
 
-        >>> data = b'foo' * 123456
+        >>> foo = b'foo' * 123456
         >>> images = {
-        ...     'ubuntu-24.04.1-live-server-riscv64.img.gz': data,
-        ...     'ubuntu-24.04.1-preinstalled-server-armhf+raspi.img.xz': data,
-        ...     'ubuntu-24.04.1-preinstalled-server-arm64+raspi.img.xz': data,
-        ...     'ubuntu-24.04.1-preinstalled-server-riscv64+unmatched.img.xz': data,
-        ...     'ubuntu-24.04.1-preinstalled-desktop-arm64+raspi.img.xz': data,
+        ... 'ubuntu-24.04.1-live-server-riscv64.img.gz': foo,
+        ... 'ubuntu-24.04.1-preinstalled-server-armhf+raspi.img.xz': foo,
+        ... 'ubuntu-24.04.1-preinstalled-server-arm64+raspi.img.xz': foo,
+        ... 'ubuntu-24.04.1-preinstalled-server-riscv64+unmatched.img.xz': foo,
+        ... 'ubuntu-24.04.1-preinstalled-desktop-arm64+raspi.img.xz': foo,
         ... }
         >>> with _test_server(_make_index(_make_sums(images))) as url:
         ...     images = get_images(url)
         >>> [i.name for i in filter_images(images, archs={'armhf'})]
         ['ubuntu-24.04.1-preinstalled-server-armhf+raspi.img.xz']
-        >>> [i.name for i in filter_images(images, image_types={'preinstalled-desktop'})]
+        >>> [i.name for i in filter_images(images,
+        ... image_types={'preinstalled-desktop'})]
         ['ubuntu-24.04.1-preinstalled-desktop-arm64+raspi.img.xz']
         >>> [i.name for i in filter_images(images, suffix='+unmatched')]
         ['ubuntu-24.04.1-preinstalled-server-riscv64+unmatched.img.xz']
         >>> [i.name for i in filter_images(images, suffix='')]
         ['ubuntu-24.04.1-live-server-riscv64.img.gz']
         >>> regex = re.compile(r'(24\\.04.*\\.gz|server.*\\+unmatched)')
-        >>> [i.name for i in filter_images(images, matches=regex)] # doctest: +NORMALIZE_WHITESPACE
+        >>> [i.name # doctest: +NORMALIZE_WHITESPACE
+        ... for i in filter_images(images, matches=regex)]
         ['ubuntu-24.04.1-live-server-riscv64.img.gz',
         'ubuntu-24.04.1-preinstalled-server-riscv64+unmatched.img.xz']
     """
@@ -647,7 +664,9 @@ class TableParser(HTMLParser):
         self.state = 'html'
         self.table = []
 
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, t.Optional[str]]]):
+    def handle_starttag(
+        self, tag: str, attrs: list[tuple[str, t.Optional[str]]]
+    ):
         if self.state == 'html' and tag == 'table':
             self.state = 'table'
         elif self.state == 'table' and tag == 'tr':
@@ -692,6 +711,7 @@ def _test_server(files, *, host='127.0.0.1', port=0):
     by the context manager.
     """
     # pylint: disable=import-outside-toplevel
+    # These imports are for the test-suite only
     import tempfile
     import http.server
     from pathlib import Path
@@ -703,7 +723,9 @@ def _test_server(files, *, host='127.0.0.1', port=0):
         console with log messages.
         """
 
-        def log_message(self, fmt, *args):
+        # pylint: disable=redefined-builtin
+        # The super-class uses format here
+        def log_message(self, format, *args):
             pass
 
     with tempfile.TemporaryDirectory() as temp:
@@ -734,6 +756,7 @@ def _make_sums(files):
     output of the "sha256sum" command for the given content.
     """
     # pylint: disable=import-outside-toplevel
+    # These imports are for the test-suite only
     import hashlib
 
     files = files.copy()
@@ -746,6 +769,7 @@ def _make_sums(files):
 
 def _make_releases():
     # pylint: disable=import-outside-toplevel
+    # These imports are for the test-suite only
     from email.utils import formatdate
 
     releases = [
@@ -755,22 +779,24 @@ def _make_releases():
     ]
 
     paras = []
+    pre = 'http://archive.ubuntu.com/ubuntu/dists'
+    suf = 'main/dist-upgrader-all/current'
     for name, version, date_str, supported in releases:
         codename = name.lower().split()[0]
         atime = dt.datetime.fromisoformat(date_str)
-        # pylint: disable=line-too-long
-        paras.append(f"""
+        paras.append(
+            f"""
 Dist: {codename}
 Name: {name}
 Version: {version}
 Date: {formatdate(atime.timestamp())}
 Supported: {int(supported)}
 Description: This is the {version} release
-Release-File: http://archive.ubuntu.com/ubuntu/dists/{codename}-updates/Release
-ReleaseNotes: http://archive.ubuntu.com/ubuntu/dists/{codename}-updates/main/dist-upgrader-all/current/ReleaseAnnouncement
-ReleaseNotesHtml: http://archive.ubuntu.com/ubuntu/dists/{codename}-updates/main/dist-upgrader-all/current/ReleaseAnnouncement.html
-UpgradeTool: http://archive.ubuntu.com/ubuntu/dists/{codename}-updates/main/dist-upgrader-all/current/{codename}.tar.gz
-UpgradeToolSignature: http://archive.ubuntu.com/ubuntu/dists/{codename}-updates/main/dist-upgrader-all/current/{codename}.tar.gz.gpg""")
+Release-File: {pre}/{codename}-updates/Release
+ReleaseNotes: {pre}/{codename}-updates/{suf}/ReleaseAnnouncement
+ReleaseNotesHtml: {pre}/{codename}-updates/{suf}/ReleaseAnnouncement.html
+UpgradeTool: {pre}/{codename}-updates/{suf}/{codename}.tar.gz
+UpgradeToolSignature: {pre}/{codename}-updates/{suf}/{codename}.tar.gz.gpg""")
     files = {'meta-release': '\n'.join(paras).strip().encode('utf-8')}
     return files
 
@@ -959,13 +985,13 @@ __test__ = {
         >>> import tempfile
         >>> from pathlib import Path
         >>> ts = dt.datetime(2021, 10, 25)
-        >>> data = b'foo' * 123456
+        >>> foo = b'foo' * 123456
         >>> images = {
-        ...     'ubuntu-22.04.5-live-server-riscv64.img.gz': data,
-        ...     'ubuntu-22.04.5-preinstalled-server-armhf+raspi.img.xz': data,
-        ...     'ubuntu-22.04.5-preinstalled-server-arm64+raspi.img.xz': data,
-        ...     'ubuntu-22.04.5-preinstalled-server-riscv64+unmatched.img.xz': data,
-        ...     'ubuntu-22.04.5-preinstalled-desktop-arm64+raspi.img.xz': data,
+        ... 'ubuntu-22.04.5-live-server-riscv64.img.gz': foo,
+        ... 'ubuntu-22.04.5-preinstalled-server-armhf+raspi.img.xz': foo,
+        ... 'ubuntu-22.04.5-preinstalled-server-arm64+raspi.img.xz': foo,
+        ... 'ubuntu-22.04.5-preinstalled-server-riscv64+unmatched.img.xz': foo,
+        ... 'ubuntu-22.04.5-preinstalled-desktop-arm64+raspi.img.xz': foo,
         ... }
         >>> files = _make_index(_make_sums(images), ts) | _make_releases()
         >>> tmp_dir = tempfile.TemporaryDirectory()
@@ -990,7 +1016,9 @@ __test__ = {
         ...         buildername='html', status=None, warning=None)
         ...     _ = setup(app)
         ...     app.build()
-        ...     print((tmp / 'build' / 'index.html').read_text()) # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        ...     print(
+        ...         (tmp / 'build' / 'index.html').read_text()
+        ...     ) # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
         <!DOCTYPE html>
         <BLANKLINE>
         <html...>
@@ -998,8 +1026,10 @@ __test__ = {
         <ul>
         <li><p>Ubuntu 22.04.5 LTS (Jammy Jellyfish) images:</p>
         <ul>
-        <li><a class="reference download external" download="" href=".../ubuntu-22.04.5-preinstalled-server-armhf+raspi.img.xz">ubuntu-22.04.5-preinstalled-server-armhf+raspi.img.xz</a></li>
-        <li><a class="reference download external" download="" href=".../ubuntu-22.04.5-preinstalled-server-arm64+raspi.img.xz">ubuntu-22.04.5-preinstalled-server-arm64+raspi.img.xz</a></li>
+        <li><a class="reference download external" download=""
+        href="...">ubuntu-22.04.5-preinstalled-server-armhf+raspi...</a></li>
+        <li><a class="reference download external" download=""
+        href="...">ubuntu-22.04.5-preinstalled-server-arm64+raspi...</a></li>
         </ul>
         </li>
         </ul>
