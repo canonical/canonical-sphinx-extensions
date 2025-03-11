@@ -114,7 +114,7 @@ For related links, specify the full URLs (in a comma-separated list).
 The link text is extracted automatically or can be specified in Markdown syntax.
 You can also specify a backup link text (using curly brackets instead of square brackets) that is used only if the link title cannot be extracted.
 Note that spaces are ignored; if you need spaces in the title, replace them with `&#32;`.
-If Sphinx complains about the metadata value because it starts with "[", enclose the full value in double quotes.
+If Sphinx complains about the metadata value because it starts with "\[", enclose the full value in double quotes.
 
 The following example uses MyST syntax for the metadata:
 
@@ -421,3 +421,13 @@ See the [Sphinx documentation](https://www.sphinx-doc.org/en/master/templating.h
 
 The extension comes with a CSS file that is suitable for the template example as given above.
 You can override these styles or define your own, depending on the theme and template that you use.
+
+### Ubuntu images
+
+This extension generates lists of Ubuntu installation images available from
+[cdimage.ubuntu.com][cdimage], after applying various filters. See [the
+README][ubuntu-image-readme] for more information.
+
+[cdimage]: https://cdimage.ubuntu.com/
+[ubuntu-image-readme]: canonical-sphinx-extensions/ubuntu-images/README.rst
+
