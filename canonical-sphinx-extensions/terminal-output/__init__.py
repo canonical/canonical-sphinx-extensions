@@ -15,6 +15,7 @@ class TerminalOutput(Directive):
         "host": directives.unchanged,
         "dir": directives.unchanged,
         "scroll": directives.unchanged,
+        "omit-user-host": directives.flag,
     }
 
     @staticmethod
@@ -41,7 +42,13 @@ class TerminalOutput(Directive):
         user = self.options["user"] if "user" in self.options else "user"
         host = self.options["host"] if "host" in self.options else "host"
         dir = self.options["dir"] if "dir" in self.options else "~"
-        prompt_text = f"{user}@{host}:{dir}{'#' if user == 'root' else '$'} "
+
+        prompt_symbol = '#' if user == 'root' else '$'
+
+        if "omit-user-host" in self.options:
+            prompt_text = f"{dir}{prompt_symbol} "
+        else:
+            prompt_text = f"{user}@{host}:{dir}{prompt_symbol} "
 
         out = nodes.container()
         out["classes"].append("terminal")
