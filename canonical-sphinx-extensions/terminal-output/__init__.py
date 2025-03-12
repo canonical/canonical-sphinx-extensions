@@ -34,14 +34,23 @@ class TerminalOutput(Directive):
         return inpline
 
     def run(self):
-
         # Build prompt with :user:, :host: and :dir: (whichever is provided)
-
-        command = self.options["input"] if "input" in self.options else ""
-        user = self.options["user"] if "user" in self.options else "user"
-        host = self.options["host"] if "host" in self.options else "host"
+        user = self.options.get("user")
+        host = self.options.get("host")
         dir = self.options["dir"] if "dir" in self.options else "~"
-        prompt_text = f"{user}@{host}:{dir}{'#' if user == 'root' else '$'} "
+        command = self.options["input"] if "input" in self.options else ""
+
+        user_symbol = '#' if user == "root" else '$'
+
+        if user and host:
+            prompt_text = f"{user}@{host}:{dir}{user_symbol} "
+        elif user and not host:
+            # Only the user is supplied
+            prompt_text = f"{user}:{dir}{user_symbol} "
+        else:
+            # Omit both user and host, just showing the host
+            # doesn't really make sense
+            prompt_text = f"{dir}{user_symbol} "
 
         out = nodes.container()
         out["classes"].append("terminal")
