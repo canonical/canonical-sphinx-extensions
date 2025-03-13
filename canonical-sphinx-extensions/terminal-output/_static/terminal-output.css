@@ -6,6 +6,10 @@
     overflow-x: scroll;
 }
 
+.terminal .highlight {
+    background-color: #202020;
+}
+
 .terminal .output {
     display: block;
     padding: 0 0.875rem;
