@@ -11,12 +11,6 @@ The options that may be specified under the directive are as follows:
     (as release codenames). See below for examples. If unspecified, all
     releases will be included.
 
-``:state:`` *support state (text)*
-    The support state of listed images. Defaults to ``supported`` indicating
-    that only actively supported images are to be included. Other valid values
-    are ``unsupported`` to list legacy images only, and ``all`` to list both
-    supported and unsupported images.
-
 ``:lts-only:`` *(no value)*
     If specified, only LTS releases will be included in the output. Interim
     releases are excluded.
@@ -72,11 +66,10 @@ Examples of usage::
         :releases: jammy-
         :suffix: +raspi
 
-    All visionfive images, regardless of support status
+    All visionfive images
 
     .. ubuntu-images::
         :suffix: +visionfive
-        :state: all
 
     All supported LTS armhf and arm64 images
 

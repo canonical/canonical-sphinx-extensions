@@ -10,12 +10,6 @@ The options that may be specified under the directive are as follows:
     (as release codenames). See below for examples. If unspecified, all
     releases will be included.
 
-``:state:`` *support state (text)*
-    The support state of listed images. Defaults to ``supported`` indicating
-    that only actively supported images are to be included. Other valid values
-    are ``unsupported`` to list legacy images only, and ``all`` to list both
-    supported and unsupported images.
-
 ``:lts-only:`` *(no value)*
     If specified, only LTS releases will be included in the output. Interim
     releases are excluded.
@@ -76,11 +70,10 @@ Examples of usage::
         :releases: jammy-
         :suffix: +raspi
 
-    All visionfive images, regardless of support status
+    All visionfive images
 
     .. ubuntu-images::
         :suffix: +visionfive
-        :state: all
 
     All supported LTS armhf and arm64 images
 
@@ -137,31 +130,6 @@ def setup(app: Sphinx) -> ExtensionMetadata:
     }
 
 
-def parse_state(s: str) -> t.Optional[bool]:
-    """
-    Converts the :class:`str` *s* into a :class:`bool` or :data:`None` for the
-    various supported states.
-
-    "supported" or "unsupported" translate to :data:`True` and :data:`False`
-    respectively, "all" (indicating both supported and unsupported releases)
-    translates to :data:`None`. For example::
-
-        >>> parse_state('All')
-        >>> parse_state(' supported ')
-        True
-        >>> parse_state('unsupported')
-        False
-    """
-    try:
-        return {
-            'supported':   True,
-            'unsupported': False,
-            'all':         None,
-        }[s.strip().lower()]
-    except KeyError:
-        raise ValueError(f'invalid state: {s}') from None
-
-
 def parse_set(s: str) -> set[str]:
     """
     Splits a :class:`str` *s* containing a comma or space-separated list of
@@ -181,7 +149,6 @@ def parse_set(s: str) -> set[str]:
 class UbuntuImagesDirective(SphinxDirective):
     option_spec = {
         'releases': str,
-        'state': parse_state,
         'lts-only': lambda s: True,
         'image-types': parse_set,
         'archs': parse_set,
@@ -212,7 +179,7 @@ class UbuntuImagesDirective(SphinxDirective):
             get_releases(urls=(meta_release_url, meta_release_dev_url)),
             spec=self.options.get('releases', ''),
             lts=self.options.get('lts-only'),
-            supported=self.options.get('state', True))
+            supported=True)
         for release in reversed(releases):
             release_item = nodes.list_item('', nodes.paragraph(
                 text=f'Ubuntu {release.version} ({release.name}) images:'))
@@ -499,9 +466,6 @@ def get_images(url: str, supported: bool = True) -> list[Image]:
         ):
             parser.feed(page.read())
     except HTTPError as exc:
-        if not supported and exc.code == 404:
-            # Expect to get nothing for unsupported releases
-            return []
         # Supported releases should *always* have images
         raise ValueError(
             f'unable to get {url}; are you sure the path '
@@ -850,17 +814,6 @@ def _make_index(
 
 
 __test__ = {
-    'bad-state': """
-    Reject bad support states::
-
-        >>> parse_state('foo')
-        Traceback (most recent call last):
-          File "<stdin>", line 1, in <module>
-          File "./downloads.py", line 56, in parse_state
-            raise ValueError(f'invalid state: {s}') from None
-        ValueError: invalid state: foo
-    """,
-
     'tuple-properties': """
     Ensure calculated Release properties operate as expected::
 
