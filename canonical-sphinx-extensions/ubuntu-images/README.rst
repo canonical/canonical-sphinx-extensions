@@ -38,6 +38,11 @@ The options that may be specified under the directive are as follows:
     filters first, and only resort to regular expressions if you find it
     absolutely necessary for complex cases.
 
+``:empty:`` *string*
+    If no images match the specified filters, output the given string instead
+    of reporting an error and failing the build. The string may be blank in
+    which case no output will be generated.
+
 Examples of valid values for the ``:releases:`` option:
 
 jammy

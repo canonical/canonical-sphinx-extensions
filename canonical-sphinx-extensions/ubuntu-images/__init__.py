@@ -1001,6 +1001,85 @@ __test__ = {
         ...
         </html>
     """,
+
+    'check-empty-output': """
+    Check that the ``:empty:`` option works correctly, outputting the requested
+    string::
+
+        >>> import tempfile
+        >>> from pathlib import Path
+        >>> ts = dt.datetime(2021, 10, 25)
+        >>> images = {}
+        >>> files = _make_index(_make_sums(images), ts) | _make_releases()
+        >>> tmp_dir = tempfile.TemporaryDirectory()
+        >>> tmp = Path(tmp_dir.name)
+        >>> with tmp_dir, _test_server(files) as url:
+        ...     (tmp / 'src').mkdir()
+        ...     (tmp / 'build').mkdir()
+        ...     (tmp / 'tree').mkdir()
+        ...     _ = (tmp / 'src' / 'index.rst').write_text(f'''\
+        ...     Download one of the supported images:
+        ...
+        ...     .. ubuntu-images::
+        ...         :releases: jammy-
+        ...         :empty: Image links to be provided after release
+        ...         :meta-release: {url}meta-release
+        ...         :meta-release-development: {url}meta-release-development
+        ...         :cdimage-template: {url}
+        ...     ''')
+        ...     app = Sphinx(
+        ...         srcdir=tmp / 'src', confdir=None,
+        ...         outdir=tmp / 'build', doctreedir=tmp / 'tree',
+        ...         buildername='html', status=None, warning=None)
+        ...     _ = setup(app)
+        ...     app.build()
+        ...     print(
+        ...         (tmp / 'build' / 'index.html').read_text()
+        ...     ) # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        <!DOCTYPE html>
+        <BLANKLINE>
+        <html...>
+        ...
+        <em>Image links to be provided after release</em>...
+        ...
+        </html>
+    """,
+
+    'check-empty-error': """
+    Check that, ``:empty:`` is unspecified, we still error out in the case
+    we've produced no links::
+
+        >>> import tempfile
+        >>> from pathlib import Path
+        >>> ts = dt.datetime(2021, 10, 25)
+        >>> images = {}
+        >>> files = _make_releases()
+        >>> tmp_dir = tempfile.TemporaryDirectory()
+        >>> tmp = Path(tmp_dir.name)
+        >>> with tmp_dir, _test_server(files) as url:
+        ...     (tmp / 'src').mkdir()
+        ...     (tmp / 'build').mkdir()
+        ...     (tmp / 'tree').mkdir()
+        ...     _ = (tmp / 'src' / 'index.rst').write_text(f'''\
+        ...     Download one of the supported images:
+        ...
+        ...     .. ubuntu-images::
+        ...         :releases: disco
+        ...         :meta-release: {url}meta-release
+        ...         :meta-release-development: {url}meta-release-development
+        ...         :cdimage-template: {url}{{release.codename}}
+        ...     ''')
+        ...     app = Sphinx(
+        ...         srcdir=tmp / 'src', confdir=None,
+        ...         outdir=tmp / 'build', doctreedir=tmp / 'tree',
+        ...         buildername='html', status=None, warning=None)
+        ...     _ = setup(app)
+        ...     app.build()
+        Traceback (most recent call last):
+          File ".../ubuntu-images/__init__.py", line 207, in run
+            raise ValueError('no images found for specified filters')
+        ValueError: no images found for specified filters
+    """,
 }
 
 
