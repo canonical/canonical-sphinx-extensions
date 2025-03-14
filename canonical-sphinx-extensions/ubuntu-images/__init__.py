@@ -43,6 +43,11 @@ The options that may be specified under the directive are as follows:
     filters first, and only resort to regular expressions if you find it
     absolutely necessary for complex cases.
 
+``:empty:`` *string*
+    If no images match the specified filters, output the given string instead
+    of reporting an error and failing the build. The string may be blank in
+    which case no output will be generated.
+
 Examples of valid values for the ``:releases:`` option:
 
 jammy
@@ -82,6 +87,14 @@ Examples of usage::
     .. ubuntu-images::
         :archs: armhf, arm64
         :lts-only:
+
+    All riscv64 images from plucky onwards, suppressing the error and
+    outputting a message when no images match
+
+    .. ubuntu-images::
+        :releases: plucky-
+        :archs: riscv64
+        :empty: Will be supported from the plucky release onwards
 """
 
 # pylint: disable=too-many-lines
@@ -174,9 +187,11 @@ class UbuntuImagesDirective(SphinxDirective):
         'archs': parse_set,
         'suffix': lambda s: '' if s is None else str(s),
         'matches': re.compile,
+        'empty': str,
         # The following options are intended for testing / advanced purposes
         # only; they override the URLs used to fetch information
         'meta-release': str,
+        'meta-release-development': str,
         'cdimage-template': str,
     }
 
@@ -184,13 +199,17 @@ class UbuntuImagesDirective(SphinxDirective):
         meta_release_url = self.options.get(
             'meta-release',
             'https://changelogs.ubuntu.com/meta-release')
+        meta_release_dev_url = self.options.get(
+            'meta-release-development',
+            'https://changelogs.ubuntu.com/meta-release-development')
         cdimage_template = self.options.get(
             'cdimage-template',
             'https://cdimage.ubuntu.com/releases/{release.codename}/release/')
 
+        empty = True
         release_list = nodes.bullet_list()
         releases = filter_releases(
-            get_releases(url=meta_release_url),
+            get_releases(urls=(meta_release_url, meta_release_dev_url)),
             spec=self.options.get('releases', ''),
             lts=self.options.get('lts-only'),
             supported=self.options.get('state', True))
@@ -198,12 +217,15 @@ class UbuntuImagesDirective(SphinxDirective):
             release_item = nodes.list_item('', nodes.paragraph(
                 text=f'Ubuntu {release.version} ({release.name}) images:'))
             images = filter_images(
-                get_images(url=cdimage_template.format(release=release)),
+                get_images(
+                    url=cdimage_template.format(release=release),
+                    supported=release.supported),
                 archs=self.options.get('archs'),
                 image_types=self.options.get('image-types'),
                 suffix=self.options.get('suffix'),
                 matches=self.options.get('matches'))
             if images:
+                empty = False
                 image_list = nodes.bullet_list()
                 for image in images:
                     image_ref = download_reference(
@@ -212,6 +234,10 @@ class UbuntuImagesDirective(SphinxDirective):
                     image_list.append(image_item)
                 release_item.append(image_list)
                 release_list.append(release_item)
+        if empty:
+            if 'empty' in self.options:
+                return [nodes.emphasis('', self.options['empty'])]
+            raise ValueError('no images found for specified filters')
         return [release_list]
 
 
@@ -354,25 +380,29 @@ class Image(t.NamedTuple):
 
 @functools.lru_cache()
 def get_releases(
-    url: str = 'https://changelogs.ubuntu.com/meta-release',
+    urls: tuple[str] = ('https://changelogs.ubuntu.com/meta-release',),
 ) -> list[Release]:
     """
     Given a meta-release *url*, return a :class:`list` of :class:`Release`
     tuples corresponding to all Ubuntu releases. For example::
 
         >>> with _test_server(_make_releases()) as url:
-        ...     releases = get_releases(url + 'meta-release')
+        ...     releases = get_releases([url + 'meta-release'])
         >>> len(releases)
         3
         >>> releases[0] # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
         Release(codename='warty', name='Warty Warthog', version='04.10',
         date=datetime.datetime(2004, 10, 20, 7, 28, 17), supported=False)
     """
-    with (
-        urlopen(url) as data,
-        io.TextIOWrapper(data, encoding='utf-8', errors='strict') as text
-    ):
-        return list(meta_parser(text))
+    releases = {}
+    for url in urls:
+        with (
+            urlopen(url) as data,
+            io.TextIOWrapper(data, encoding='utf-8', errors='strict') as text
+        ):
+            for release in meta_parser(text):
+                releases[release.codename] = release
+    return list(releases.values())
 
 
 def filter_releases(
@@ -388,7 +418,7 @@ def filter_releases(
     options. For example::
 
         >>> with _test_server(_make_releases()) as url:
-        ...     releases = get_releases(url + 'meta-release')
+        ...     releases = get_releases([url + 'meta-release'])
         >>> [r.codename for r in releases]
         ['warty', 'disco', 'jammy']
         >>> [r.codename for r in filter_releases(releases, spec='disco-')]
@@ -437,7 +467,7 @@ def filter_releases(
 
 
 @functools.lru_cache
-def get_images(url: str) -> list[Image]:
+def get_images(url: str, supported: bool = True) -> list[Image]:
     """
     Given the *url* of a cdimage directory containing images, returns a
     sequence of :class:`Image` named tuples. For example::
@@ -457,6 +487,7 @@ def get_images(url: str) -> list[Image]:
         date=datetime.date(2021, 10, 25),
         sha256='e9cd9718e97ac951c0ead5de8069d0ff5de188620b12b02...')
     """
+    # pylint: disable=too-many-locals
     # NOTE: This code relies on the current layout of pages on
     # cdimage.ubuntu.com; if extra tables or columns are introduced or
     # re-ordered this will need revisiting...
@@ -467,7 +498,11 @@ def get_images(url: str) -> list[Image]:
             io.TextIOWrapper(data, encoding='utf-8', errors='strict') as page,
         ):
             parser.feed(page.read())
-    except HTTPError:
+    except HTTPError as exc:
+        if not supported and exc.code == 404:
+            # Expect to get nothing for unsupported releases
+            return []
+        # Supported releases should *always* have images
         raise ValueError(
             f'unable to get {url}; are you sure the path '
             f'is correct?') from None
@@ -591,7 +626,7 @@ def meta_parser(file: t.TextIO) -> t.Iterable[Release]:
                         time_tuple.tm_min,
                         time_tuple.tm_sec,
                     )
-        else:
+        elif set(Release._fields) <= locals().keys():
             yield Release(codename, name, version, date, supported)
             del codename, name, version, date, supported
 
@@ -771,7 +806,10 @@ ReleaseNotes: {pre}/{codename}-updates/{suf}/ReleaseAnnouncement
 ReleaseNotesHtml: {pre}/{codename}-updates/{suf}/ReleaseAnnouncement.html
 UpgradeTool: {pre}/{codename}-updates/{suf}/{codename}.tar.gz
 UpgradeToolSignature: {pre}/{codename}-updates/{suf}/{codename}.tar.gz.gpg""")
-    files = {'meta-release': '\n'.join(paras).strip().encode('utf-8')}
+    files = {
+        'meta-release': '\n'.join(paras).strip().encode('utf-8'),
+        'meta-release-development': b'',
+    }
     return files
 
 
@@ -981,6 +1019,7 @@ __test__ = {
         ...         :archs: armhf,arm64
         ...         :image-types: preinstalled-server
         ...         :meta-release: {url}meta-release
+        ...         :meta-release-development: {url}meta-release-development
         ...         :cdimage-template: {url}
         ...     ''')
         ...     app = Sphinx(
