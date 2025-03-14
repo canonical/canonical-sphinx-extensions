@@ -465,7 +465,7 @@ def get_images(url: str, supported: bool = True) -> list[Image]:
             io.TextIOWrapper(data, encoding='utf-8', errors='strict') as page,
         ):
             parser.feed(page.read())
-    except HTTPError as exc:
+    except HTTPError:
         # Supported releases should *always* have images
         raise ValueError(
             f'unable to get {url}; are you sure the path '
