@@ -7,8 +7,8 @@ The options that may be specified under the directive are as follows:
 
 ``:releases:`` *releases (list of ranges)*
     A comma or space-separated list of partial dash-delimited release ranges
-    (as release codenames). See below for examples. If unspecified, all
-    releases will be included.
+    (as release codenames or numbers). See below for examples. If unspecified,
+    all releases will be included.
 
 ``:lts-only:`` *(no value)*
     If specified, only LTS releases will be included in the output. Interim
@@ -47,13 +47,27 @@ Examples of valid values for the ``:releases:`` option:
 jammy
     Just the 22.04 release
 
+22.04
+    Releases may also be specified numerically, but note that you must *not*
+    specify a point-release suffix (22.04 is acceptable, but 22.04.5 is not)
+
 jammy, noble
     Just the 22.04 and 24.04 releases
 
+jammy, 24.04
+    You can combine numeric and codename references, although this is
+    discouraged for the sake of clarity
+
 focal-noble
-    All releases from 20.04 to 24.04
+    All releases from 20.04 to 24.04, inclusive
+
+20.04-24.04
+    All releases from 20.04 to 24.04, inclusive
 
 jammy-
+    All releases from 22.04 onwards
+
+22.04-
     All releases from 22.04 onwards
 
 -noble
@@ -67,7 +81,7 @@ Examples of usage::
     All supported raspi images from jammy onwards
 
     .. ubuntu-images:
-        :releases: jammy-
+        :releases: 22.04-
         :suffix: +raspi
 
     All visionfive images
@@ -230,6 +244,10 @@ class Release(t.NamedTuple):
         The version of the release. A string of the form "YY.MM.P" with an
         optional " LTS" suffix, e.g. '24.04.1 LTS'
 
+    .. attribute:: version_yymm
+
+        The :attr:`version` in the "canonical" form "YY.MM"
+
     .. attribute:: date
 
         A :class:`~datetime.datetime` indicating the timestamp of the release.
@@ -245,6 +263,10 @@ class Release(t.NamedTuple):
     version: str
     date: dt.datetime
     supported: bool
+
+    @property
+    def version_yymm(self) -> str:
+        return self.version[:5]
 
     @property
     def is_lts(self) -> bool:
@@ -390,7 +412,7 @@ def filter_releases(
         ['warty', 'disco', 'jammy']
         >>> [r.codename for r in filter_releases(releases, spec='disco-')]
         ['disco', 'jammy']
-        >>> [r.codename for r in filter_releases(releases, spec='disco')]
+        >>> [r.codename for r in filter_releases(releases, spec='19.04')]
         ['disco']
         >>> [r.codename for r in filter_releases(releases, spec='warty,jammy')]
         ['warty', 'jammy']
@@ -407,11 +429,19 @@ def filter_releases(
     """
     if spec:
         rel_order = [release.codename for release in releases]
+        rel_name_map = {
+            release.version_yymm: release.codename
+            for release in releases
+        }
         rel_spec = {
             tuple(elem.split('-', 1)) if '-' in elem else (elem, elem)
             for elem in {
                 elem.strip() for elem in spec.replace(",", " ").split()
             }
+        }
+        rel_spec = {
+            (rel_name_map.get(start, start), rel_name_map.get(finish, finish))
+            for (start, finish) in rel_spec
         }
         rel_selected = []
         for elem in rel_spec:
