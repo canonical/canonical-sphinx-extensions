@@ -177,6 +177,7 @@ class UbuntuImagesDirective(SphinxDirective):
     }
 
     def run(self) -> list[nodes.Node]:
+        document = self.state.document
         meta_release_url = self.options.get(
             'meta-release',
             'https://changelogs.ubuntu.com/meta-release')
@@ -218,7 +219,10 @@ class UbuntuImagesDirective(SphinxDirective):
         if empty:
             if 'empty' in self.options:
                 return [nodes.emphasis('', self.options['empty'])]
-            raise ValueError('no images found for specified filters')
+            return [
+                document.reporter.error(
+                    'no images found for specified filters', line=self.lineno)
+            ]
         return [release_list]
 
 
