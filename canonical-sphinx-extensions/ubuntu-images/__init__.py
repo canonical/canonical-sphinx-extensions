@@ -129,8 +129,11 @@ from urllib.error import HTTPError
 from docutils import nodes
 from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective
-from sphinx.util.typing import ExtensionMetadata  # pylint: disable=no-name-in-module # noqa: E501
 from sphinx.addnodes import download_reference
+
+if t.TYPE_CHECKING:
+    from typing import ClassVar, Any
+    from sphinx.util.typing import ExtensionMetadata, OptionSpec
 
 
 def setup(app: Sphinx) -> ExtensionMetadata:
@@ -161,7 +164,7 @@ def parse_set(s: str) -> set[str]:
 
 
 class UbuntuImagesDirective(SphinxDirective):
-    option_spec = {
+    option_spec: ClassVar[OptionSpec] = {
         'releases': str,
         'lts-only': lambda s: True,
         'image-types': parse_set,
