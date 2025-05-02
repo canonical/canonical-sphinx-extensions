@@ -25,11 +25,10 @@ The options that may be specified under the directive are as follows:
     Filter images by their architecture. The list may be comma or space
     separated. If unspecified, all architectures are included.
 
-``:suffix:`` *image +suffix (string)*
+``:suffixes:`` *image +suffixes (list of string)*
     Filter images by their (plus-prefixed) suffix. If unspecified, any suffix
-    (including images with no suffix) will be included in the output. If
-    specified but blank, only images with no suffix will be included in the
-    output.
+    (including images with no suffix) will be included in the output. The
+    special value "-" may be given to indicate images with no suffix.
 
 ``:matches:`` *regular expression (string)*
     Filter images to those with filenames matching the specified regular
@@ -82,12 +81,12 @@ Examples of usage::
 
     .. ubuntu-images:
         :releases: 22.04-
-        :suffix: +raspi
+        :suffixes: +raspi
 
     All visionfive images
 
     .. ubuntu-images::
-        :suffix: +visionfive
+        :suffixes: +visionfive
 
     All supported LTS armhf and arm64 images
 
@@ -132,7 +131,7 @@ from sphinx.util.docutils import SphinxDirective
 from sphinx.addnodes import download_reference
 
 if t.TYPE_CHECKING:
-    from typing import ClassVar, Any
+    from typing import ClassVar
     from sphinx.util.typing import ExtensionMetadata, OptionSpec
 
 
@@ -170,6 +169,7 @@ class UbuntuImagesDirective(SphinxDirective):
         'image-types': parse_set,
         'archs': parse_set,
         'suffix': lambda s: '' if s is None else str(s),
+        'suffixes': parse_set,
         'matches': re.compile,
         'empty': str,
         # The following options are intended for testing / advanced purposes
@@ -191,6 +191,26 @@ class UbuntuImagesDirective(SphinxDirective):
             'cdimage-template',
             'https://cdimage.ubuntu.com/releases/{release.codename}/release/')
 
+        warnings = []
+        if 'suffix' in self.options:
+            warnings.append(
+                document.reporter.warning(
+                    'the :suffix: option is deprecated in favour of the '
+                    ':suffixes: option', line=self.lineno))
+            if 'suffixes' in self.options:
+                return [
+                    document.reporter.error(
+                        'cannot specify both :suffix: and :suffixes: options',
+                        line=self.lineno)
+                ]
+            else:
+                self.options['suffixes'] = {self.options['suffix']}
+        if 'suffixes' in self.options:
+            self.options['suffixes'] = {
+                '' if suffix == '-' else suffix
+                for suffix in self.options['suffixes']
+            }
+
         empty = True
         release_list = nodes.bullet_list()
         releases = filter_releases(
@@ -207,7 +227,7 @@ class UbuntuImagesDirective(SphinxDirective):
                     supported=release.supported),
                 archs=self.options.get('archs'),
                 image_types=self.options.get('image-types'),
-                suffix=self.options.get('suffix'),
+                suffixes=self.options.get('suffixes'),
                 matches=self.options.get('matches'))
             if images:
                 empty = False
@@ -221,12 +241,12 @@ class UbuntuImagesDirective(SphinxDirective):
                 release_list.append(release_item)
         if empty:
             if 'empty' in self.options:
-                return [nodes.emphasis('', self.options['empty'])]
+                return warnings + [nodes.emphasis('', self.options['empty'])]
             return [
                 document.reporter.error(
                     'no images found for specified filters', line=self.lineno)
             ]
-        return [release_list]
+        return warnings + [release_list]
 
 
 # Copy doc-string from the module for the class
@@ -594,7 +614,7 @@ def filter_images(
     images: t.Sequence[Image],
     archs: t.Optional[set[str]] = None,
     image_types: t.Optional[set[str]] = None,
-    suffix: t.Optional[str] = None,
+    suffixes: t.Optional[set[str]] = None,
     matches: t.Optional[re.Pattern[str]] = None,
 ) -> t.Sequence[Image]:
     """
@@ -618,9 +638,9 @@ def filter_images(
         >>> [i.name for i in filter_images(images,
         ... image_types={'preinstalled-desktop'})]
         ['ubuntu-24.04.1-preinstalled-desktop-arm64+raspi.img.xz']
-        >>> [i.name for i in filter_images(images, suffix='+unmatched')]
+        >>> [i.name for i in filter_images(images, suffixes={'+unmatched'})]
         ['ubuntu-24.04.1-preinstalled-server-riscv64+unmatched.img.xz']
-        >>> [i.name for i in filter_images(images, suffix='')]
+        >>> [i.name for i in filter_images(images, suffixes={''})]
         ['ubuntu-24.04.1-live-server-riscv64.img.gz']
         >>> regex = re.compile(r'(24\\.04.*\\.gz|server.*\\+unmatched)')
         >>> [i.name # doctest: +NORMALIZE_WHITESPACE
@@ -633,7 +653,7 @@ def filter_images(
         for image in images
         if (archs is None or image.arch in archs)
         and (image_types is None or image.image_type in image_types)
-        and (suffix is None or image.suffix == suffix)
+        and (suffixes is None or image.suffix in suffixes)
         and (matches is None or matches.search(image.name))
     ]
 
@@ -1185,11 +1205,12 @@ __test__ = {
         >>> files = _make_releases()
         >>> tmp_dir = tempfile.TemporaryDirectory()
         >>> tmp = Path(tmp_dir.name)
+        >>> warning = tmp / 'warnings.txt'
         >>> with tmp_dir, _test_server(files) as url:
         ...     (tmp / 'src').mkdir()
         ...     (tmp / 'build').mkdir()
         ...     (tmp / 'tree').mkdir()
-        ...     _ = (tmp / 'src' / 'index.rst').write_text(f'''\
+        ...     _ = (tmp / 'src' / 'index.rst').write_text(f'''\\
         ...     Download one of the supported images:
         ...
         ...     .. ubuntu-images::
@@ -1198,16 +1219,19 @@ __test__ = {
         ...         :meta-release-development: {url}meta-release-development
         ...         :cdimage-template: {url}{{release.codename}}
         ...     ''')
-        ...     app = Sphinx(
-        ...         srcdir=tmp / 'src', confdir=None,
-        ...         outdir=tmp / 'build', doctreedir=tmp / 'tree',
-        ...         buildername='html', status=None, warning=None)
-        ...     _ = setup(app)
-        ...     app.build()
-        Traceback (most recent call last):
-          File ".../ubuntu-images/__init__.py", line 207, in run
-            raise ValueError('no images found for specified filters')
-        ValueError: no images found for specified filters
+        ...     with warning.open('w') as f:
+        ...         app = Sphinx(
+        ...             srcdir=tmp / 'src', confdir=None,
+        ...             outdir=tmp / 'build', doctreedir=tmp / 'tree',
+        ...             buildername='html', status=None, warning=f)
+        ...         _ = setup(app)
+        ...         app.build()
+        ...     print(
+        ...         # Strip ANSI color codes
+        ...         re.sub(r'\\x1b\\[[0-9;]+m', '', warning.read_text())
+        ...     ) # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        /.../index.rst:3: ERROR: no images found for specified filters
+        <BLANKLINE>
     """,
 }
 
