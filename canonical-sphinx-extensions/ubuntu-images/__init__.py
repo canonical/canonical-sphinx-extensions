@@ -336,7 +336,7 @@ class Release(t.NamedTuple):
             eol = self.date.replace(
                 year=self.date.year + inc_year, month=month)
         now = dt.datetime.now(tz=dt.timezone.utc)
-        return self.upgradable or (now <= eol)
+        return self.upgradable or (self.date <= now <= eol)
 
 
 image_re = re.compile(
