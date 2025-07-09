@@ -1,5 +1,10 @@
 from docutils import nodes
-import re
+from sphinx import addnodes
+from sphinx.builders import Builder
+from sphinx.domains.std import StandardDomain
+from sphinx.environment import BuildEnvironment
+from sphinx.util.docutils import ReferenceRole
+from typing import cast, override
 
 
 def spellexception_role(
@@ -17,32 +22,71 @@ def none_role(
     return [], []
 
 
-def literalref_role(
-    name, rawtext, text, lineno, inliner, options=None, content=None
-):
+class LiteralrefRole(ReferenceRole):
+    """Define the literalref role's behavior."""
 
-    findURL = re.compile(r"^(.+)<(.+)>$")
-    m = findURL.match(text)
+    def run(self) -> tuple[list[nodes.Node], list[nodes.system_message]]:
+        """Create a cross-reference with monospaced text."""
+        node: nodes.reference | addnodes.pending_xref
 
-    if m is not None:
-        linktext = m.groups()[0]
-        linkurl = m.groups()[1]
-    else:
-        linktext = text
-        linkurl = text
+        # Create an external reference
+        if self.target.startswith("http://") or self.target.startswith("https://"):
+            node = nodes.reference("", "", internal=False, refuri=self.target)
+        else:  # Create an internal reference
+            node = addnodes.pending_xref(
+                "",
+                refdomain="lrd",  # use custom domain
+                reftype="ref",
+                reftarget=self.target,
+                refexplicit=True,
+                refwarning=True,
+            )
 
-    if linkurl.find("://") < 0:
-        linkurl = "https://" + linkurl
+        #  append the link text
+        node.append(nodes.literal(text=self.title))
 
-    node = nodes.reference("", "", internal=False, refuri=linkurl)
-    node.append(nodes.literal(text=linktext))
+        return [node], []
 
-    return [node], []
+class LiteralrefDomain(StandardDomain):
+    """Custom domain for the :literalref: role."""
+
+    name: str = "lrd"
+
+    @override
+    def resolve_xref(
+        self,
+        env: BuildEnvironment,
+        fromdocname: str,
+        builder: Builder,
+        typ: str,
+        target: str,
+        node: addnodes.pending_xref,
+        contnode: nodes.Element,
+    ) -> nodes.reference | None:
+        """Replace the resolved node's child with the children assigned to the pending reference node.
+
+        By default, Sphinx's standard domain
+        disregards the type of the pending node's children and places their
+        contents into an inline node.
+        """
+        resolved_node = super().resolve_xref(
+            env, fromdocname, builder, typ, target, node, contnode
+        )  # resolve the reference using the standard domain
+
+        if (
+            resolved_node
+            and hasattr(resolved_node, "children")
+            and hasattr(node, "children")
+        ):  # replace the child node from ``std`` with the original children
+            resolved_node.children = node.children
+
+        return cast(nodes.reference, resolved_node)
 
 
 def setup(app):
+    app.add_domain(LiteralrefDomain)
     app.add_role("spellexception", spellexception_role)
-    app.add_role("literalref", literalref_role)
+    app.add_role("literalref", LiteralrefRole())
     app.add_role("none", none_role)
 
     return {"parallel_read_safe": True,
