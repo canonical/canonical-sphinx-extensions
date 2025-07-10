@@ -1,3 +1,5 @@
+import re
+
 from docutils import nodes
 from sphinx import addnodes
 from sphinx.builders import Builder
@@ -30,7 +32,12 @@ class LiteralrefRole(ReferenceRole):
         node: nodes.reference | addnodes.pending_xref
 
         # Create an external reference
-        if self.target.startswith("http://") or self.target.startswith("https://"):
+        if re.match(r"^(https?:\/\/\S+|\S+\.\S{2,3}\/?)\b", self.target):
+            self.target = (
+                f"https://{self.target}"
+                if "://" not in self.target
+                else self.target
+            )
             node = nodes.reference("", "", internal=False, refuri=self.target)
         else:  # Create an internal reference
             node = addnodes.pending_xref(
@@ -46,6 +53,7 @@ class LiteralrefRole(ReferenceRole):
         node.append(nodes.literal(text=self.title))
 
         return [node], []
+
 
 class LiteralrefDomain(StandardDomain):
     """Custom domain for the :literalref: role."""
@@ -63,7 +71,8 @@ class LiteralrefDomain(StandardDomain):
         node: addnodes.pending_xref,
         contnode: nodes.Element,
     ) -> nodes.reference | None:
-        """Replace the resolved node's child with the children assigned to the pending reference node.
+        """Replace the resolved node's child with the children assigned to
+        the pending reference node.
 
         By default, Sphinx's standard domain
         disregards the type of the pending node's children and places their
