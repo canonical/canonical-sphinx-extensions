@@ -33,4 +33,5 @@
 
 .terminal-code pre {
     font-size: var(--font-size--small--2);
+    margin: 0 0;
 }
