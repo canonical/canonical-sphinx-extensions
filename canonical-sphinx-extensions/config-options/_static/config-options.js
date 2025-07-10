@@ -1,5 +1,8 @@
 $(document).ready(function() {
 
+    /* Request one frame to avoid scrolling before collapsing content */
+    window.requestAnimationFrame();
+
     /* Hide all details except if the URL has an anchor for one */
     $('.configoption div.details').prop("hidden","until-found");
 
