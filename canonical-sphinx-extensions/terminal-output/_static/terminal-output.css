@@ -30,3 +30,7 @@
 .terminal.scroll .input, .terminal.scroll .output {
     width: max-content;
 }
+
+.terminal-code pre {
+    font-size: var(--font-size--small--2);
+}

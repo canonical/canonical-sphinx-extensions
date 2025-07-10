@@ -107,9 +107,9 @@ class TerminalOutput(SphinxDirective):
             if blob[0].startswith(":input: "):
                 out.append(self.input_line(prompt_text, blob[0][8:]))
             else:
-                out.append(nodes.literal_block(text="\n".join(blob)))
-            if only_input:
-                out.append(nodes.paragraph())
+                output = nodes.literal_block(text="\n".join(blob))
+                output["classes"].append("terminal-code")
+                out.append(output)
         return [out]
 
 
