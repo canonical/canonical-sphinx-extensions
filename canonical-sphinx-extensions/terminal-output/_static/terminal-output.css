@@ -35,6 +35,6 @@
     font-size: var(--font-size--small--2);
 }
 
-.terminal-code div {
+div.terminal-code {
     margin: 0 0;
 }
