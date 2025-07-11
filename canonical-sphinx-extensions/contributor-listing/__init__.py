@@ -69,8 +69,7 @@ def setup_func(app, pagename, templatename, context, doctree):
                 for contributor in contributors:
                     if (
                         contributor not in contributors_dict
-                        or commit.committed_date >
-                            contributors_dict[contributor]["date"]
+                        or commit.committed_date > contributors_dict[contributor]["date"]
                     ):
                         contributors_dict[contributor] = {
                             "date": commit.committed_date,

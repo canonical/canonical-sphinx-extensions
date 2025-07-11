@@ -3,7 +3,6 @@
     color: #ebebeb;
     border: 1px solid #666;
     padding: 0.625rem 0;
-    overflow-x: scroll;
 }
 
 .terminal .highlight {
@@ -29,4 +28,12 @@
 
 .terminal.scroll .input, .terminal.scroll .output {
     width: max-content;
+}
+
+.terminal-code pre {
+    font-size: var(--font-size--small--2);
+}
+
+div.terminal-code {
+    margin: 0 0;
 }

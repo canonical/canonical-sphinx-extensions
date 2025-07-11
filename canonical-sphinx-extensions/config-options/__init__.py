@@ -162,7 +162,7 @@ class ConfigIndex(Index):
         duplicates = []
         for _name, dispname, _typ, _docname, anchor, _priority in options:
             fullname = anchor.partition(":")[0].partition("-")[0] \
-                       + "-" + dispname
+                + "-" + dispname
             if fullname in dispnames:
                 duplicates.append(fullname)
             else:
