@@ -9,9 +9,7 @@ def parse_contents(contents):
     command_output = []
     out = []
 
-    while contents:
-        line = contents[0]
-        contents = contents[1:]
+    for line in contents:
         if line.startswith(":input: "):
             out.append(command_output)
             out.append([line])
@@ -60,10 +58,10 @@ class TerminalOutput(SphinxDirective):
     def run(self):
         # if :user: or :host: are provided, replace those in the prompt
 
-        command = "" if "input" not in self.options else self.options["input"]
-        user = "user" if "user" not in self.options else self.options["user"]
-        host = "host" if "host" not in self.options else self.options["host"]
-        dir = "~" if "dir" not in self.options else self.options["dir"]
+        command = self.options.get("input", "")
+        user = self.options.get("user", "user")
+        host = self.options.get("host", "host")
+        dir = self.options.get("dir", "~")
         user_symbol = "#" if user == "root" else "$"
         if user and host:
             prompt_text = f"{user}@{host}:{dir}{user_symbol} "
@@ -92,8 +90,7 @@ class TerminalOutput(SphinxDirective):
 
         out.append(self.input_line(prompt_text, command))
         # breakpoint()
-        only_input = all((line.startswith(":input: ") for line in self.content))
-        if only_input:
+        if all((line.startswith(":input: ") for line in self.content)):
             out.append(nodes.paragraph())
         # Go through the content and append all lines as output
         # except for the ones that start with ":input: " - those get
@@ -101,11 +98,9 @@ class TerminalOutput(SphinxDirective):
 
         parsed_content = parse_contents(self.content)
 
-        for blob in parsed_content:
-            if not blob:
-                continue
+        for blob in filter(None, parsed_content):
             if blob[0].startswith(":input: "):
-                out.append(self.input_line(prompt_text, blob[0][8:]))
+                out.append(self.input_line(prompt_text, blob[0][len(":input: "):]))
             else:
                 output = nodes.literal_block(text="\n".join(blob))
                 output["classes"].append("terminal-code")
