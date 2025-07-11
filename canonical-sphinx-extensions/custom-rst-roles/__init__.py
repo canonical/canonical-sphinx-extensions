@@ -6,7 +6,7 @@ from sphinx.builders import Builder
 from sphinx.domains.std import StandardDomain
 from sphinx.environment import BuildEnvironment
 from sphinx.util.docutils import ReferenceRole
-from typing import cast, override
+from typing import cast
 
 
 def spellexception_role(
@@ -60,7 +60,6 @@ class LiteralrefDomain(StandardDomain):
 
     name: str = "lrd"
 
-    @override
     def resolve_xref(
         self,
         env: BuildEnvironment,
