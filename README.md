@@ -171,7 +171,7 @@ Currently implemented:
 
 - `spellexception` - Includes the provided text in `<spellexception></spellexception>`, which makes it possible to exclude it from a spelling checker.
 - `literalref` - Renders the provided reference in code-style, which excludes the link text from the spelling checker.
-   You can provide either just the link (for example, ``:literalref:`www.example.com` ``, which results in `www.example.com` as the link text and `https://www.example.com` as the link URL) or a separate link text and URL (for example, ``:literalref:`xyzcommand <www.example.com>` ``).
+   You can provide either just the link (for example, ``:literalref:`www.example.com` ``, which results in `www.example.com` as the link text and `https://www.example.com` as the link URL) or a separate link text and URL (for example, ``:literalref:`xyzcommand <www.example.com>` ``). This also now works for internal headings such as ``:literalref:`some.command` `` if the internal link has a defined anchor.
 - `none` - Excludes the provided text from the output.
   This is useful for comments, especially when providing `wokeignore` rules.
 
@@ -303,6 +303,19 @@ output line two
 
 :input: another command
 more output
+```
+````
+
+Note: This supports `:input` as part of the initial configuration block. but requires a space between the first input and any successive input lines. For example:
+
+````
+```{terminal}
+:user: root
+:host: vm
+:input: command#1
+
+:input: command#2
+:input: command#3
 ```
 ````
 
