@@ -90,8 +90,7 @@ class TerminalOutput(SphinxDirective):
 
         out.append(self.input_line(prompt_text, command))
         # breakpoint()
-        if all((line.startswith(":input: ") for line in self.content)):
-            out.append(nodes.paragraph())
+
         # Go through the content and append all lines as output
         # except for the ones that start with ":input: " - those get
         # a prompt
