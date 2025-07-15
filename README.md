@@ -319,6 +319,8 @@ Note: This supports `:input` as part of the initial configuration block. but req
 ```
 ````
 
+Note: This extension overrides the default `copybutton_selector` used by [sphinx-copybutton](https://sphinx-copybutton.readthedocs.io/en/latest/index.html). Add the `no-copybutton` class to code-blocks or terminal directives to disable the copy button. 
+
 ### Filtered ToC
 
 This extension adds a `:filtered-toctree:` directive that is almost the same as the normal `:toctree:` directive but allows excluding pages based on specified filters.

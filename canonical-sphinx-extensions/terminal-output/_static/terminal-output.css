@@ -37,3 +37,38 @@
 div.terminal-code {
     margin: 0 0;
 }
+
+/* Copybutton settings */
+
+div.input  {
+    position: relative;
+}
+
+div.input > button.copybtn {
+    overflow-y: visible;
+    top: 0.1em;
+    right: 0.1em;
+    width: 1.4em;
+    height: 1.4em;
+}
+
+div.input > button.copybtn svg {
+    width: 1.2em;
+    height: 1.2em;
+}
+
+.input:hover button.copybtn, button.copybtn.success {
+	opacity: 1;
+}
+
+.input button.copybtn:hover {
+    background-color: rgb(235, 235, 235);
+}
+
+.input button.copybtn:active {
+    background-color: rgb(187, 187, 187);
+}
+
+.terminal.scroll > .input {
+    width: inherit;
+}
