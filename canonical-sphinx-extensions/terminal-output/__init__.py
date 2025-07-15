@@ -5,7 +5,9 @@ from . import common
 import sphinx
 from sphinx.application import Sphinx
 
+
 copybutton_classes = "div.terminal:not(.no-copybutton) > div.container > code.command, div:not(.terminal-code, .no-copybutton) > div.highlight > pre"
+
 
 def parse_contents(contents):
     command_output = []
