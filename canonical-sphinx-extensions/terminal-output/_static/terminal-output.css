@@ -69,7 +69,7 @@ div.input > button.copybtn svg {
     align-items: center;
     background-color: inherit;
     border: none;
-    color: var(--color-code-background);
+    color: #f8f8f8;
     cursor: pointer;
     transition: color .3s, opacity .3s;
 }
