@@ -61,14 +61,15 @@ div.input > button.copybtn svg {
 	opacity: 1;
 }
 
-.input button.copybtn:hover {
-    background-color: rgb(235, 235, 235);
-}
-
-.input button.copybtn:active {
-    background-color: rgb(187, 187, 187);
-}
-
 .terminal.scroll > .input {
     width: inherit;
+}
+
+.input button.copybtn {
+    align-items: center;
+    background-color: inherit;
+    border: none;
+    color: var(--color-code-background);
+    cursor: pointer;
+    transition: color .3s, opacity .3s;
 }
