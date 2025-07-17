@@ -319,7 +319,7 @@ Note: This supports `:input` as part of the initial configuration block. but req
 ```
 ````
 
-Note: This extension overrides the default `copybutton_selector` used by [sphinx-copybutton](https://sphinx-copybutton.readthedocs.io/en/latest/index.html). Add the `no-copybutton` class to code-blocks or terminal directives to disable the copy button. 
+Note: You can use the `:copy:` option, or `copybutton` class to enable terminal inputs to be copyable.
 
 ### Filtered ToC
 
