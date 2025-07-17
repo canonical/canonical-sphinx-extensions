@@ -122,6 +122,9 @@ def setup(app: Sphinx):
     app.add_directive("terminal", TerminalOutput)
 
     common.add_css(app, "terminal-output.css")
-    app.config.copybutton_selector = copybutton_classes
+    if "copybutton_selector" not in app.config._raw_config:
+        app.config._raw_config.setdefault("copybutton_selector", copybutton_classes)
+    if app.config._raw_config["copybutton_selector"] == "div.highlight pre":
+        app.config._raw_config["copybutton_selector"] = copybutton_classes
 
     return {"version": "0.1", "parallel_read_safe": True, "parallel_write_safe": True}
