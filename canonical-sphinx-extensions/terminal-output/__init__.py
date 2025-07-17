@@ -6,7 +6,7 @@ import sphinx
 from sphinx.application import Sphinx
 
 
-copybutton_classes = "div.terminal:not(.no-copybutton) > div.container > code.command, div:not(.terminal-code, .no-copybutton) > div.highlight > pre"
+copybutton_classes = "div.terminal.copybutton > div.container > code.command, div:not(.terminal-code, .no-copybutton) > div.highlight > pre"
 
 
 def parse_contents(contents):
@@ -37,6 +37,7 @@ class TerminalOutput(SphinxDirective):
         "host": directives.unchanged,
         "dir": directives.unchanged,
         "scroll": directives.unchanged,
+        "copy": directives.unchanged,
     }
 
     @staticmethod
@@ -81,6 +82,8 @@ class TerminalOutput(SphinxDirective):
 
         out = nodes.container()
         out["classes"].append("terminal")
+        if "copy" in self.options:
+            out["classes"].append("copybutton")
         for item in classes:
             out["classes"].append(item)
         # The super-large value for linenothreshold is a major hack since I
