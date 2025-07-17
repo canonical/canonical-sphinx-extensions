@@ -319,6 +319,8 @@ Note: This supports `:input` as part of the initial configuration block. but req
 ```
 ````
 
+Note: You can use the `:copy:` option, or `copybutton` class to enable terminal inputs to be copyable.
+
 ### Filtered ToC
 
 This extension adds a `:filtered-toctree:` directive that is almost the same as the normal `:toctree:` directive but allows excluding pages based on specified filters.

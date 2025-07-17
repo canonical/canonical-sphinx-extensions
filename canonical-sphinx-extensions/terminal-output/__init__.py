@@ -3,6 +3,10 @@ from sphinx.util.docutils import SphinxDirective
 from docutils.parsers.rst import directives
 from . import common
 import sphinx
+from sphinx.application import Sphinx
+
+
+copybutton_classes = "div.terminal.copybutton > div.container > code.command, div:not(.terminal-code, .no-copybutton) > div.highlight > pre"
 
 
 def parse_contents(contents):
@@ -27,11 +31,13 @@ class TerminalOutput(SphinxDirective):
     optional_arguments = 0
     has_content = True
     option_spec = {
+        "class": directives.class_option,
         "input": directives.unchanged,
         "user": directives.unchanged,
         "host": directives.unchanged,
         "dir": directives.unchanged,
         "scroll": directives.unchanged,
+        "copy": directives.unchanged,
     }
 
     @staticmethod
@@ -58,6 +64,7 @@ class TerminalOutput(SphinxDirective):
     def run(self):
         # if :user: or :host: are provided, replace those in the prompt
 
+        classes = self.options.get("class", "")
         command = self.options.get("input", "")
         user = self.options.get("user", "user")
         host = self.options.get("host", "host")
@@ -75,6 +82,10 @@ class TerminalOutput(SphinxDirective):
 
         out = nodes.container()
         out["classes"].append("terminal")
+        if "copy" in self.options:
+            out["classes"].append("copybutton")
+        for item in classes:
+            out["classes"].append(item)
         # The super-large value for linenothreshold is a major hack since I
         # can't figure out how to disable line numbering and the
         # linenothreshold kwarg seems to be required.
@@ -107,9 +118,13 @@ class TerminalOutput(SphinxDirective):
         return [out]
 
 
-def setup(app):
+def setup(app: Sphinx):
     app.add_directive("terminal", TerminalOutput)
 
     common.add_css(app, "terminal-output.css")
+    if "copybutton_selector" not in app.config._raw_config:
+        app.config._raw_config.setdefault("copybutton_selector", copybutton_classes)
+    if app.config._raw_config["copybutton_selector"] == "div.highlight pre":
+        app.config._raw_config["copybutton_selector"] = copybutton_classes
 
     return {"version": "0.1", "parallel_read_safe": True, "parallel_write_safe": True}
