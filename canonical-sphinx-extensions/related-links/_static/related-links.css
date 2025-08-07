@@ -35,5 +35,6 @@
 }
 
 .relatedlinks-title-container {
-    padding-top: 2em;
+    padding: var(--toc-title-padding);
+    padding-top: var(--toc-spacing-vertical);
 }
