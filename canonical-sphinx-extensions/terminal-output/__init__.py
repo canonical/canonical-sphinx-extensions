@@ -97,9 +97,9 @@ class TerminalOutput(SphinxDirective):
         if "scroll" in self.options:
             out["classes"].append("scroll")
 
-        # Add the original prompt and input
-
-        out.append(self.input_line(prompt_text, command))
+        # Append the prompt and input if initial input is provided
+        if command:
+            out.append(self.input_line(prompt_text, command))
         # breakpoint()
 
         # Go through the content and append all lines as output
