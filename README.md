@@ -1,6 +1,6 @@
 > [!IMPORTANT]
-> canonical-sphinx-extensions has been superseded by the standalone extensions and will
-> no longer be maintained. All issues and contributions should be opened against the new
+> canonical-sphinx-extensions has been superseded by the standalone extensions and is no
+> longer maintained. All issues and contributions should be opened against the new
 > repositories.
 >
 > * [sphinx-config-options](https://github.com/canonical/sphinx-config-options)
