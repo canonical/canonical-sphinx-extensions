@@ -3,14 +3,14 @@
 > longer maintained. All issues and contributions should be opened against the new
 > repositories.
 >
-> * [sphinx-config-options](https://github.com/canonical/sphinx-config-options)
-> * [sphinx-contributor-listing](https://github.com/canonical/sphinx-contributor-listing)
-> * [sphinx-filtered-toctree](https://github.com/canonical/sphinx-filtered-toctree)
-> * [sphinx-related-links](https://github.com/canonical/sphinx-related-links)
-> * [sphinx-roles](https://github.com/canonical/sphinx-roles)
-> * [sphinx-terminal](https://github.com/canonical/sphinx-terminal)
-> * [sphinx-ubuntu-images](https://github.com/canonical/sphinx-ubuntu-images)
-> * [sphinx-youtube-links](https://github.com/canonical/sphinx-youtube-links)
+> * [sphinx-config-options](https://github.com/canonical/sphinx-config-options): `config:option`
+> * [sphinx-contributor-listing](https://github.com/canonical/sphinx-contributor-listing): `contributor-listing`
+> * [sphinx-filtered-toctree](https://github.com/canonical/sphinx-filtered-toctree): `filtered-toctree`
+> * [sphinx-related-links](https://github.com/canonical/sphinx-related-links): `discourse` and `relatedlinks`
+> * [sphinx-roles](https://github.com/canonical/sphinx-roles): `literalref`, `spellexception`, and `none`
+> * [sphinx-terminal](https://github.com/canonical/sphinx-terminal): `terminal`
+> * [sphinx-ubuntu-images](https://github.com/canonical/sphinx-ubuntu-images): `ubuntu-images`
+> * [sphinx-youtube-links](https://github.com/canonical/sphinx-youtube-links): `youtube`
 
 # Canonical Sphinx extensions
 
